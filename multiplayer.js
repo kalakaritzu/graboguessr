@@ -16,6 +16,7 @@ let mpGuessLatLng = null;
 let mpOverlays = [];
 let mpIsHost = false;
 let mpCurrentRound = -1;
+let mpLatestRoomData = null; // kept in sync by the room's onSnapshot listener
 
 function randomRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I ambiguity
@@ -93,6 +94,7 @@ function enterRoom(code) {
 function handleRoomUpdate(snap) {
   if (!snap.exists) return;
   const data = snap.data();
+  mpLatestRoomData = data;
 
   if (data.status === 'lobby') {
     renderLobbyPlayers(data.players);
@@ -186,8 +188,7 @@ document.getElementById('mp-guess-btn').addEventListener('click', submitMpGuess)
 
 async function submitMpGuess() {
   document.getElementById('mp-guess-btn').disabled = true;
-  const roomSnap = await mpRoomRef.get();
-  const data = roomSnap.data();
+  const data = mpLatestRoomData;
   const spot = SPOTS[data.spotOrder[data.round]];
   const dist = haversine(mpGuessLatLng.lat, mpGuessLatLng.lng, spot.lat, spot.lng);
   const points = Math.max(0, Math.round(MAX_POINTS * (1 - dist / MAX_DISTANCE_KM)));
@@ -245,14 +246,16 @@ function checkRoundComplete(data, guessesSnap) {
 }
 
 document.getElementById('mp-next-btn').addEventListener('click', async () => {
-  const roomSnap = await mpRoomRef.get();
-  const data = roomSnap.data();
+  const data = mpLatestRoomData;
   const isLastRound = data.round + 1 >= data.spotOrder.length;
   if (isLastRound) {
     await mpRoomRef.update({ status: 'done' });
   } else {
+    // Don't switch screens here - the room's onSnapshot listener will call
+    // startMpRound() -> loadMpRound() once this write lands, which is what
+    // actually clears the map/loads the new photo. Doing it here too just
+    // shows a flash of the *previous* round's stale map/photo first.
     await mpRoomRef.update({ round: data.round + 1 });
-    showScreen('mp-game');
   }
 });
 
@@ -282,4 +285,5 @@ function leaveRoomCleanup() {
   mpRoomCode = null;
   mpRoomRef = null;
   mpCurrentRound = -1;
+  mpLatestRoomData = null;
 }
