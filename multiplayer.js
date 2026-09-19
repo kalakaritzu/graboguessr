@@ -18,14 +18,21 @@ let mpIsHost = false;
 let mpCurrentRound = -1;
 let mpLatestRoomData = null; // kept in sync by the room's onSnapshot listener
 let mpGuessSubmitted = false; // reset each round - distinguishes "not guessed yet" from "already guessed" while the button is disabled for both reasons
-let mpTimerInterval = null;
 
 const DEFAULT_MP_SETTINGS = { timerSeconds: 60, roundCount: 5, difficulty: 'easy' };
 
-// game.js defines setupPhotoZoom() and calls it once for singleplayer's
-// #photo - reuse it here so multiplayer's photo gets the same scroll-zoom
-// and click-drag pan instead of being stuck static.
+// game.js defines setupPhotoZoom()/createRoundTimer() and uses them for
+// singleplayer's #photo/#timer-info - reuse both here for multiplayer's
+// equivalents instead of duplicating the logic.
 const resetMpPhotoZoom = setupPhotoZoom('mp-photo', '#mp-game .photo-panel');
+const mpTimer = createRoundTimer(document.getElementById('mp-timer-info'), () => {
+  // Ran out of time without guessing - auto-guess at the town center so the
+  // round can still complete instead of leaving the other player stuck.
+  if (!mpGuessSubmitted) {
+    if (!mpGuessLatLng) mpGuessLatLng = { lat: GRABO_CENTER[0], lng: GRABO_CENTER[1] };
+    submitMpGuess();
+  }
+});
 
 function randomRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I ambiguity
@@ -254,48 +261,18 @@ function loadMpRound(data) {
   // it fetches.
   const photoEl = document.getElementById('mp-photo');
   const roundLoading = document.getElementById('mp-round-loading');
-  roundLoading.classList.remove('mp-fade-hidden');
-  photoEl.onload = () => roundLoading.classList.add('mp-fade-hidden');
-  photoEl.onerror = () => roundLoading.classList.add('mp-fade-hidden');
-  photoEl.classList.remove('mp-difficulty-medium', 'mp-difficulty-hard');
-  if (settings.difficulty === 'medium') photoEl.classList.add('mp-difficulty-medium');
-  if (settings.difficulty === 'hard') photoEl.classList.add('mp-difficulty-hard');
+  roundLoading.classList.remove('fade-hidden');
+  photoEl.onload = () => roundLoading.classList.add('fade-hidden');
+  photoEl.onerror = () => roundLoading.classList.add('fade-hidden');
+  applyDifficultyFilter(photoEl, settings.difficulty);
   photoEl.src = spot.photo;
 
   document.getElementById('mp-round-info').textContent = `Runda ${data.round + 1} / ${data.spotOrder.length}`;
-  startMpTimer(settings.timerSeconds);
+  mpTimer.start(settings.timerSeconds);
 
   if (mpUnsubGuesses) mpUnsubGuesses();
   mpUnsubGuesses = mpRoomRef.collection('rounds').doc(String(data.round)).collection('guesses')
     .onSnapshot((gsnap) => checkRoundComplete(data, gsnap));
-}
-
-function stopMpTimer() {
-  if (mpTimerInterval) { clearInterval(mpTimerInterval); mpTimerInterval = null; }
-  document.getElementById('mp-timer-info').classList.add('hidden');
-}
-
-function startMpTimer(seconds) {
-  stopMpTimer();
-  if (!seconds) return; // 0 = "Ingen gräns" (no limit)
-  let remaining = seconds;
-  const timerEl = document.getElementById('mp-timer-info');
-  timerEl.classList.remove('hidden');
-  timerEl.textContent = `${remaining}s`;
-  mpTimerInterval = setInterval(() => {
-    remaining--;
-    if (remaining <= 0) {
-      stopMpTimer();
-      // Didn't guess in time - submit at the town center so the round can
-      // still complete instead of leaving the other player stuck waiting.
-      if (!mpGuessSubmitted) {
-        if (!mpGuessLatLng) mpGuessLatLng = { lat: GRABO_CENTER[0], lng: GRABO_CENTER[1] };
-        submitMpGuess();
-      }
-      return;
-    }
-    timerEl.textContent = `${remaining}s`;
-  }, 1000);
 }
 
 document.getElementById('mp-guess-btn').addEventListener('click', submitMpGuess);
@@ -303,7 +280,7 @@ document.getElementById('mp-guess-btn').addEventListener('click', submitMpGuess)
 async function submitMpGuess() {
   document.getElementById('mp-guess-btn').disabled = true;
   mpGuessSubmitted = true;
-  stopMpTimer();
+  mpTimer.stop();
   const data = mpLatestRoomData;
   const spot = SPOTS[data.spotOrder[data.round]];
   const dist = haversine(mpGuessLatLng.lat, mpGuessLatLng.lng, spot.lat, spot.lng);
@@ -406,5 +383,5 @@ function leaveRoomCleanup() {
   mpRoomRef = null;
   mpCurrentRound = -1;
   mpLatestRoomData = null;
-  stopMpTimer();
+  mpTimer.stop();
 }

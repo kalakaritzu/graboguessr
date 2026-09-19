@@ -1,5 +1,5 @@
 const GRABO_CENTER = [57.8272, 12.2916];
-const ROUNDS = Math.min(5, SPOTS.length);
+let ROUNDS = Math.min(5, SPOTS.length); // overridden by the "Antal rundor" setting each game
 const MAX_DISTANCE_KM = 5; // distance at which score hits 0
 const MAX_POINTS = 1000;
 
@@ -11,6 +11,40 @@ let actualMarker = null;
 let guessLatLng = null;
 let roundLocked = false; // true once the guess is submitted - the pin can no longer move
 let map, line;
+let spDifficulty = 'easy';
+
+// Difficulty filters applied to a round's photo - "medium"/"hard" make it
+// harder to read without touching the underlying image or scoring. Shared
+// by singleplayer and multiplayer.
+function applyDifficultyFilter(imgEl, difficulty) {
+  imgEl.classList.remove('difficulty-medium', 'difficulty-hard');
+  if (difficulty === 'medium') imgEl.classList.add('difficulty-medium');
+  if (difficulty === 'hard') imgEl.classList.add('difficulty-hard');
+}
+
+// Shared per-round countdown, used by both singleplayer (#timer-info) and
+// multiplayer (#mp-timer-info) - each screen gets its own instance bound to
+// its own display element and its own "ran out of time" behavior.
+function createRoundTimer(displayEl, onExpire) {
+  let interval = null;
+  function stop() {
+    if (interval) { clearInterval(interval); interval = null; }
+    displayEl.classList.add('hidden');
+  }
+  function start(seconds) {
+    stop();
+    if (!seconds) return; // 0 = "Ingen gräns" (no limit)
+    let remaining = seconds;
+    displayEl.classList.remove('hidden');
+    displayEl.textContent = `${remaining}s`;
+    interval = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) { stop(); onExpire(); return; }
+      displayEl.textContent = `${remaining}s`;
+    }, 1000);
+  }
+  return { start, stop };
+}
 
 function initMap() {
   map = L.map('map').setView(GRABO_CENTER, 14);
@@ -57,6 +91,9 @@ function shuffle(arr) {
 }
 
 function startGame() {
+  ROUNDS = Math.min(Number(document.getElementById('sp-setting-rounds').value), SPOTS.length);
+  spDifficulty = document.getElementById('sp-setting-difficulty').value;
+  spTimerSeconds = Number(document.getElementById('sp-setting-timer').value);
   score = 0;
   round = 0;
   order = shuffle([...Array(SPOTS.length).keys()]).slice(0, ROUNDS);
@@ -77,10 +114,18 @@ function loadRound() {
   document.getElementById('guess-btn').disabled = true;
 
   const spot = SPOTS[order[round]];
-  document.getElementById('photo').src = spot.photo;
+  const photoEl = document.getElementById('photo');
+  const roundLoadingEl = document.getElementById('round-loading');
+  roundLoadingEl.classList.remove('fade-hidden');
+  photoEl.onload = () => roundLoadingEl.classList.add('fade-hidden');
+  photoEl.onerror = () => roundLoadingEl.classList.add('fade-hidden');
+  applyDifficultyFilter(photoEl, spDifficulty);
+  photoEl.src = spot.photo;
+
   document.getElementById('round-info').textContent = `Runda ${round + 1} / ${ROUNDS}`;
   document.getElementById('score-info').textContent = `Poäng: ${score}`;
   resetPhotoZoom();
+  spTimer.start(spTimerSeconds);
 }
 
 // Scroll-to-zoom on the photo, centered on the cursor, plus click-and-drag
@@ -172,8 +217,19 @@ function setupPhotoZoom(imgId, panelSelector) {
 
 const resetPhotoZoom = setupPhotoZoom('photo', '#photo-panel');
 
+let spTimerSeconds = 60;
+const spTimer = createRoundTimer(document.getElementById('timer-info'), () => {
+  // Ran out of time without guessing - auto-guess at the town center so the
+  // round still ends instead of leaving the player stuck.
+  if (!roundLocked) {
+    guessLatLng = { lat: GRABO_CENTER[0], lng: GRABO_CENTER[1] };
+    makeGuess();
+  }
+});
+
 function makeGuess() {
   roundLocked = true;
+  spTimer.stop();
   document.getElementById('guess-btn').disabled = true;
   const spot = SPOTS[order[round]];
   const dist = haversine(guessLatLng.lat, guessLatLng.lng, spot.lat, spot.lng);

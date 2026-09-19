@@ -237,20 +237,27 @@ button.pill-btn {
 #lobby-start-btn { margin-top: 12px; }
 #lobby-leave-btn { margin-top: 6px; }
 
-/* Difficulty filters applied to #mp-photo - "medium"/"hard" make the photo
-   harder to read without changing the underlying image. */
-.mp-difficulty-medium { filter: blur(3px); }
-.mp-difficulty-hard { filter: blur(6px) grayscale(50%); }
+/* Difficulty filters applied to the photo (#photo or #mp-photo) - "medium"/
+   "hard" make it harder to read without changing the underlying image.
+   Shared by singleplayer and multiplayer. */
+.difficulty-medium { filter: blur(3px); }
+.difficulty-hard { filter: blur(6px) grayscale(50%); }
 
 /* Black cover shown while the next round's photo loads, so players never
-   see a half-loaded or stale image; fades out once it's ready. */
-#mp-round-loading {
+   see a half-loaded or stale image; fades out once it's ready. Shared by
+   #round-loading (singleplayer) and #mp-round-loading (multiplayer). */
+.round-loading {
   position: absolute; inset: 0; z-index: 50;
   background: #000; display: flex; align-items: center; justify-content: center;
   transition: opacity .4s ease; opacity: 1;
 }
-#mp-round-loading p { font-size: 20px; font-weight: 600; color: #fff; }
-#mp-round-loading.mp-fade-hidden { opacity: 0; pointer-events: none; }
+.round-loading p { font-size: 20px; font-weight: 600; color: #fff; }
+.round-loading.fade-hidden { opacity: 0; pointer-events: none; }
+
+/* Singleplayer's settings selects live on the start screen (not in a fixed-
+   width card like the lobby), so give the row group its own column width. */
+#sp-settings { margin: 4px 0 24px; }
+#sp-settings .lobby-setting-row { max-width: 320px; margin: 8px auto; }
 
 #mp-final-list { list-style: none; margin: 16px 0; text-align: left; }
 

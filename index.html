@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
 
@@ -20,11 +20,15 @@
       <div id="hud">
         <span id="round-info">Round 1 / 5</span>
         <span id="score-info">Score: 0</span>
+        <span id="timer-info" class="hidden"></span>
       </div>
     </div>
     <div id="map-panel">
       <div id="map"></div>
       <button id="guess-btn" class="btn" disabled>Gissa</button>
+    </div>
+    <div id="round-loading" class="round-loading">
+      <p>Laddar nästa runda…</p>
     </div>
   </div>
 
@@ -51,6 +55,36 @@
     <div id="start-box">
       <h1>GråboGuessr</h1>
       <p>Gissa var i Gråbo varje foto togs. Närmare gissningar ger fler poäng.</p>
+
+      <div id="sp-settings">
+        <div class="lobby-setting-row">
+          <label for="sp-setting-timer">Tid per runda</label>
+          <select id="sp-setting-timer">
+            <option value="30">30s</option>
+            <option value="60" selected>60s</option>
+            <option value="90">90s</option>
+            <option value="0">Ingen gräns</option>
+          </select>
+        </div>
+        <div class="lobby-setting-row">
+          <label for="sp-setting-rounds">Antal rundor</label>
+          <select id="sp-setting-rounds">
+            <option value="3">3</option>
+            <option value="5" selected>5</option>
+            <option value="7">7</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+        <div class="lobby-setting-row">
+          <label for="sp-setting-difficulty">Svårighetsgrad</label>
+          <select id="sp-setting-difficulty">
+            <option value="easy" selected>Lätt</option>
+            <option value="medium">Medel</option>
+            <option value="hard">Svår</option>
+          </select>
+        </div>
+      </div>
+
       <div class="start-actions">
         <button id="start-btn" class="btn">Enkelspelarspel</button>
         <button id="multiplayer-btn" class="btn btn-outline">Flerspelarläge</button>
@@ -164,7 +198,7 @@
       <div id="mp-map"></div>
       <button id="mp-guess-btn" class="btn" disabled>Gissa</button>
     </div>
-    <div id="mp-round-loading">
+    <div id="mp-round-loading" class="round-loading">
       <p>Laddar nästa runda…</p>
     </div>
   </div>
@@ -202,7 +236,7 @@
   <script src="auth.js"></script>
   <script src="leaderboard.js"></script>
   <script src="spots.js?v=3"></script>
-  <script src="game.js?v=10"></script>
-  <script src="multiplayer.js?v=8"></script>
+  <script src="game.js?v=11"></script>
+  <script src="multiplayer.js?v=9"></script>
 </body>
 </html>
