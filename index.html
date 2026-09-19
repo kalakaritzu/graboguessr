@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 
@@ -115,6 +115,37 @@
       <div id="lobby-code"></div>
       <div class="lobby-code-label">Spelare</div>
       <ul id="lobby-players"></ul>
+
+      <div class="lobby-code-label">Inställningar</div>
+      <div id="lobby-settings">
+        <div class="lobby-setting-row">
+          <label for="setting-timer">Tid per runda</label>
+          <select id="setting-timer">
+            <option value="30">30s</option>
+            <option value="60" selected>60s</option>
+            <option value="90">90s</option>
+            <option value="0">Ingen gräns</option>
+          </select>
+        </div>
+        <div class="lobby-setting-row">
+          <label for="setting-rounds">Antal rundor</label>
+          <select id="setting-rounds">
+            <option value="3">3</option>
+            <option value="5" selected>5</option>
+            <option value="7">7</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+        <div class="lobby-setting-row">
+          <label for="setting-difficulty">Svårighetsgrad</label>
+          <select id="setting-difficulty">
+            <option value="easy" selected>Lätt</option>
+            <option value="medium">Medel</option>
+            <option value="hard">Svår</option>
+          </select>
+        </div>
+      </div>
+
       <button id="lobby-start-btn" class="btn hidden" disabled>Starta</button>
       <button id="lobby-leave-btn" class="btn btn-text">Lämna</button>
     </div>
@@ -126,11 +157,15 @@
       <img id="mp-photo" src="" alt="Gissa var i Gråbo detta foto togs">
       <div class="hud">
         <span id="mp-round-info">Runda 1 / 5</span>
+        <span id="mp-timer-info" class="hidden"></span>
       </div>
     </div>
     <div class="map-panel">
       <div id="mp-map"></div>
       <button id="mp-guess-btn" class="btn" disabled>Gissa</button>
+    </div>
+    <div id="mp-round-loading">
+      <p>Laddar nästa runda…</p>
     </div>
   </div>
 
@@ -168,6 +203,6 @@
   <script src="leaderboard.js"></script>
   <script src="spots.js?v=3"></script>
   <script src="game.js?v=10"></script>
-  <script src="multiplayer.js?v=7"></script>
+  <script src="multiplayer.js?v=8"></script>
 </body>
 </html>

@@ -220,8 +220,37 @@ button.pill-btn {
 }
 #lobby-players { list-style: none; margin: 8px 0 20px; }
 #lobby-players li { padding: 6px 0; font-weight: 600; }
-#lobby-start-btn { margin-top: 4px; }
+
+#lobby-settings { margin: 6px 0 4px; }
+.lobby-setting-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin: 8px 0;
+}
+.lobby-setting-row label { font-size: 14px; font-weight: 600; color: #F0EDEA; }
+.lobby-setting-row select {
+  font-family: 'Fredoka', system-ui, sans-serif; font-weight: 600; font-size: 14px;
+  padding: 6px 14px; border-radius: 999px; border: 2px solid var(--card-field);
+  background: var(--card-field); color: #fff; cursor: pointer;
+}
+.lobby-setting-row select:disabled { opacity: .65; cursor: not-allowed; }
+
+#lobby-start-btn { margin-top: 12px; }
 #lobby-leave-btn { margin-top: 6px; }
+
+/* Difficulty filters applied to #mp-photo - "medium"/"hard" make the photo
+   harder to read without changing the underlying image. */
+.mp-difficulty-medium { filter: blur(3px); }
+.mp-difficulty-hard { filter: blur(6px) grayscale(50%); }
+
+/* Black cover shown while the next round's photo loads, so players never
+   see a half-loaded or stale image; fades out once it's ready. */
+#mp-round-loading {
+  position: absolute; inset: 0; z-index: 50;
+  background: #000; display: flex; align-items: center; justify-content: center;
+  transition: opacity .4s ease; opacity: 1;
+}
+#mp-round-loading p { font-size: 20px; font-weight: 600; color: #fff; }
+#mp-round-loading.mp-fade-hidden { opacity: 0; pointer-events: none; }
 
 #mp-final-list { list-style: none; margin: 16px 0; text-align: left; }
 

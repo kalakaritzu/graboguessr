@@ -17,6 +17,10 @@ let mpOverlays = [];
 let mpIsHost = false;
 let mpCurrentRound = -1;
 let mpLatestRoomData = null; // kept in sync by the room's onSnapshot listener
+let mpGuessSubmitted = false; // reset each round - distinguishes "not guessed yet" from "already guessed" while the button is disabled for both reasons
+let mpTimerInterval = null;
+
+const DEFAULT_MP_SETTINGS = { timerSeconds: 60, roundCount: 5, difficulty: 'easy' };
 
 // game.js defines setupPhotoZoom() and calls it once for singleplayer's
 // #photo - reuse it here so multiplayer's photo gets the same scroll-zoom
@@ -57,8 +61,6 @@ async function createRoom() {
   if (!currentUser) return;
   showMpLoading('Skapar rum…');
   try {
-    const order = shuffle([...Array(SPOTS.length).keys()]).slice(0, ROUNDS);
-
     let code, ref, snap;
     for (let attempt = 0; attempt < 5; attempt++) {
       code = randomRoomCode();
@@ -71,7 +73,8 @@ async function createRoom() {
       hostUid: currentUser.uid,
       status: 'lobby',
       round: 0,
-      spotOrder: order,
+      spotOrder: [], // decided when the host starts the game, using the settings picked in the lobby
+      settings: { ...DEFAULT_MP_SETTINGS },
       players: { [currentUser.uid]: { name: currentUser.name, totalPoints: 0 } },
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -121,6 +124,7 @@ function handleRoomUpdate(snap) {
 
   if (data.status === 'lobby') {
     renderLobbyPlayers(data.players);
+    renderLobbySettings(data.settings || DEFAULT_MP_SETTINGS);
     const startBtn = document.getElementById('lobby-start-btn');
     startBtn.classList.toggle('hidden', !mpIsHost);
     startBtn.disabled = Object.keys(data.players).length < 2;
@@ -141,10 +145,39 @@ function renderLobbyPlayers(players) {
   });
 }
 
+// Only the host can change these - everyone else just sees them update live
+// (synced through the room doc) so they know what they're about to play.
+function renderLobbySettings(settings) {
+  const timerSel = document.getElementById('setting-timer');
+  const roundsSel = document.getElementById('setting-rounds');
+  const diffSel = document.getElementById('setting-difficulty');
+  timerSel.value = String(settings.timerSeconds);
+  roundsSel.value = String(settings.roundCount);
+  diffSel.value = settings.difficulty;
+  [timerSel, roundsSel, diffSel].forEach((el) => { el.disabled = !mpIsHost; });
+}
+
+function updateMpSetting(key, value) {
+  if (!mpIsHost || !mpRoomRef) return;
+  mpRoomRef.update({ [`settings.${key}`]: value });
+}
+document.getElementById('setting-timer').addEventListener('change', (e) => {
+  updateMpSetting('timerSeconds', Number(e.target.value));
+});
+document.getElementById('setting-rounds').addEventListener('change', (e) => {
+  updateMpSetting('roundCount', Number(e.target.value));
+});
+document.getElementById('setting-difficulty').addEventListener('change', (e) => {
+  updateMpSetting('difficulty', e.target.value);
+});
+
 document.getElementById('lobby-start-btn').addEventListener('click', async () => {
+  const settings = mpLatestRoomData.settings || DEFAULT_MP_SETTINGS;
+  const roundCount = Math.min(settings.roundCount, SPOTS.length);
+  const order = shuffle([...Array(SPOTS.length).keys()]).slice(0, roundCount);
   showMpLoading('Startar spelet…');
   try {
-    await mpRoomRef.update({ status: 'playing', round: 0 });
+    await mpRoomRef.update({ status: 'playing', round: 0, spotOrder: order });
   } finally {
     hideMpLoading();
   }
@@ -205,6 +238,7 @@ function clearMpOverlays() {
 
 function loadMpRound(data) {
   mpGuessLatLng = null;
+  mpGuessSubmitted = false;
   ensureMpMap();
   if (mpGuessMarker) { mpMap.removeLayer(mpGuessMarker); mpGuessMarker = null; }
   clearMpOverlays();
@@ -212,19 +246,64 @@ function loadMpRound(data) {
   document.getElementById('mp-guess-btn').disabled = true;
 
   resetMpPhotoZoom();
+  const settings = data.settings || DEFAULT_MP_SETTINGS;
   const spot = SPOTS[data.spotOrder[data.round]];
-  document.getElementById('mp-photo').src = spot.photo;
+
+  // Cover the photo/map with a black screen until the new photo has actually
+  // finished loading, instead of showing a stale or half-loaded image while
+  // it fetches.
+  const photoEl = document.getElementById('mp-photo');
+  const roundLoading = document.getElementById('mp-round-loading');
+  roundLoading.classList.remove('mp-fade-hidden');
+  photoEl.onload = () => roundLoading.classList.add('mp-fade-hidden');
+  photoEl.onerror = () => roundLoading.classList.add('mp-fade-hidden');
+  photoEl.classList.remove('mp-difficulty-medium', 'mp-difficulty-hard');
+  if (settings.difficulty === 'medium') photoEl.classList.add('mp-difficulty-medium');
+  if (settings.difficulty === 'hard') photoEl.classList.add('mp-difficulty-hard');
+  photoEl.src = spot.photo;
+
   document.getElementById('mp-round-info').textContent = `Runda ${data.round + 1} / ${data.spotOrder.length}`;
+  startMpTimer(settings.timerSeconds);
 
   if (mpUnsubGuesses) mpUnsubGuesses();
   mpUnsubGuesses = mpRoomRef.collection('rounds').doc(String(data.round)).collection('guesses')
     .onSnapshot((gsnap) => checkRoundComplete(data, gsnap));
 }
 
+function stopMpTimer() {
+  if (mpTimerInterval) { clearInterval(mpTimerInterval); mpTimerInterval = null; }
+  document.getElementById('mp-timer-info').classList.add('hidden');
+}
+
+function startMpTimer(seconds) {
+  stopMpTimer();
+  if (!seconds) return; // 0 = "Ingen gräns" (no limit)
+  let remaining = seconds;
+  const timerEl = document.getElementById('mp-timer-info');
+  timerEl.classList.remove('hidden');
+  timerEl.textContent = `${remaining}s`;
+  mpTimerInterval = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      stopMpTimer();
+      // Didn't guess in time - submit at the town center so the round can
+      // still complete instead of leaving the other player stuck waiting.
+      if (!mpGuessSubmitted) {
+        if (!mpGuessLatLng) mpGuessLatLng = { lat: GRABO_CENTER[0], lng: GRABO_CENTER[1] };
+        submitMpGuess();
+      }
+      return;
+    }
+    timerEl.textContent = `${remaining}s`;
+  }, 1000);
+}
+
 document.getElementById('mp-guess-btn').addEventListener('click', submitMpGuess);
 
 async function submitMpGuess() {
   document.getElementById('mp-guess-btn').disabled = true;
+  mpGuessSubmitted = true;
+  stopMpTimer();
   const data = mpLatestRoomData;
   const spot = SPOTS[data.spotOrder[data.round]];
   const dist = haversine(mpGuessLatLng.lat, mpGuessLatLng.lng, spot.lat, spot.lng);
@@ -327,4 +406,5 @@ function leaveRoomCleanup() {
   mpRoomRef = null;
   mpCurrentRound = -1;
   mpLatestRoomData = null;
+  stopMpTimer();
 }
