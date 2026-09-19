@@ -125,9 +125,14 @@ document.getElementById('lobby-leave-btn').addEventListener('click', () => {
 });
 
 function startMpRound(data) {
-  showScreen('mp-game');
+  // The room doc's onSnapshot fires on *any* field change - including a
+  // totalPoints increment when either player submits a guess - not just
+  // round advances. Only switch screens when actually entering a new round,
+  // otherwise this would yank the view back from the reveal modal (or just
+  // repaint the map/photo pointlessly) on every unrelated room update.
   if (data.round !== mpCurrentRound) {
     mpCurrentRound = data.round;
+    showScreen('mp-game');
     loadMpRound(data);
   }
 }
