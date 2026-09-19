@@ -51,6 +51,18 @@ body::before {
   border: 1px solid rgba(255,255,255,0.15);
 }
 
+/* Lets a player bail out of a game/room in progress - mirrors the HUD
+   pills' look but sits top-right and is clickable. */
+.quit-btn {
+  position: absolute; top: 14px; right: 14px; z-index: 1000;
+  font-family: 'Fredoka', system-ui, sans-serif;
+  background: var(--pill-bg); color: #fff;
+  padding: 8px 16px; border-radius: 999px;
+  font-weight: 600; font-size: 14px; border: 1px solid rgba(255,255,255,0.15);
+  cursor: pointer;
+}
+.quit-btn:hover { background: rgba(10,16,26,0.75); }
+
 #map-panel, .map-panel {
   width: 380px; position: relative; border-left: 3px solid var(--coral-dark);
   transition: width .25s ease;

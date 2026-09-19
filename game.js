@@ -275,6 +275,14 @@ document.getElementById('restart-btn').addEventListener('click', startGame);
 document.getElementById('guess-btn').addEventListener('click', makeGuess);
 document.getElementById('next-btn').addEventListener('click', nextRound);
 
+document.getElementById('quit-btn').addEventListener('click', () => {
+  if (!confirm('Avsluta spelet?')) return;
+  spTimer.stop();
+  document.getElementById('game').classList.add('hidden');
+  document.getElementById('result-modal').classList.add('hidden');
+  document.getElementById('start-modal').classList.remove('hidden');
+});
+
 if (SPOTS.length === 0) {
   document.querySelector('#start-box p').textContent =
     'Inga foton tillagda än. Lägg till poster i spots.js först.';

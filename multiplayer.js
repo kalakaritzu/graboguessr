@@ -194,6 +194,12 @@ document.getElementById('lobby-leave-btn').addEventListener('click', () => {
   showScreen('start-modal');
 });
 
+document.getElementById('mp-quit-btn').addEventListener('click', () => {
+  if (!confirm('Avsluta spelet?')) return;
+  leaveRoomCleanup();
+  showScreen('start-modal');
+});
+
 function startMpRound(data) {
   // The room doc's onSnapshot fires on *any* field change - including a
   // totalPoints increment when either player submits a guess - not just
