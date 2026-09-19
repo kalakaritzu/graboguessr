@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  html, body, #map { height: 100%; margin: 0; padding: 0; }
+  .spot-icon {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-family: monospace; font-size: 11px; font-weight: 600;
+    border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4);
+  }
+  .popup-title { font-weight: 600; margin-bottom: 4px; font-size: 14px; }
+  .popup-coords { font-family: monospace; font-size: 11px; color: #666; margin-bottom: 8px; }
+  .popup-link {
+    display: inline-block; padding: 6px 10px; border-radius: 6px;
+    background: #1f6f54; color: #fff; text-decoration: none; font-size: 13px;
+    margin-right: 6px; margin-bottom: 4px;
+  }
+  .popup-toggle {
+    background: #e4e9df; color: #333;
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // No route line by design - this page is just "where are the spots",
+  // not "what order to visit them in" (that's the web route planner).
+  const PENDING_COLOR = '#c67a1f';
+  const DONE_COLOR = '#1f6f54';
+  const HOME_COLOR = '#3a4a91';
+
+  const map = L.map('map').setView([57.8362, 12.2985], 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  let markers = {};
+
+  function makeIcon(spot) {
+    const isHome = spot.stop === 0;
+    const color = isHome ? HOME_COLOR : (spot.done ? DONE_COLOR : PENDING_COLOR);
+    const label = isHome ? '⌂' : spot.stop;
+    return L.divIcon({
+      className: '',
+      html: `<div class="spot-icon" style="background:${color}">${label}</div>`,
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+      popupAnchor: [0, -13]
+    });
+  }
+
+  function popupHtml(spot) {
+    // No name in the query - a labeled geo: URI can make Maps geocode the name text
+    // and snap to a same-named POI elsewhere instead of these exact coordinates.
+    const geoUrl = `geo:${spot.lat},${spot.lng}?q=${spot.lat},${spot.lng}`;
+    const label = spot.stop === 0 ? spot.name : `#${spot.stop} · ${spot.name}`;
+    // gg-toggle: is a made-up scheme the Android side intercepts to flip photographed
+    // status for this stop, since a WebView can't otherwise call back into the app.
+    const toggleLink = spot.stop === 0 ? '' :
+      `<a class="popup-link popup-toggle" href="gg-toggle:${spot.stop}">${spot.done ? 'Mark as not done' : 'Mark as photographed'}</a>`;
+    return `<div class="popup-title">${label}</div>
+      <div class="popup-coords">${spot.lat.toFixed(6)}, ${spot.lng.toFixed(6)}</div>
+      <a class="popup-link" href="${geoUrl}">Open in Google Maps</a>${toggleLink}`;
+  }
+
+  let lastSpots = {};
+
+  // Called from the Android side (initial load + whenever the screen resumes)
+  // with the current spot list and photographed status.
+  window.setSpots = function(spots) {
+    Object.values(markers).forEach(m => map.removeLayer(m));
+    markers = {};
+    lastSpots = {};
+    const bounds = [];
+    spots.forEach(spot => {
+      const marker = L.marker([spot.lat, spot.lng], { icon: makeIcon(spot) }).addTo(map);
+      marker.bindPopup(popupHtml(spot));
+      markers[spot.stop] = marker;
+      lastSpots[spot.stop] = spot;
+      bounds.push([spot.lat, spot.lng]);
+    });
+    if (bounds.length) map.fitBounds(bounds, { padding: [24, 24] });
+  };
+
+  // Called after the Android side toggles a spot's done state via gg-toggle:,
+  // so the marker color and popup update in place without losing the open popup.
+  window.updateSpotDone = function(stop, done) {
+    const spot = lastSpots[stop];
+    const marker = markers[stop];
+    if (!spot || !marker) return;
+    spot.done = done;
+    marker.setIcon(makeIcon(spot));
+    marker.setPopupContent(popupHtml(spot));
+    marker.openPopup();
+  };
+</script>
+</body>
+</html>

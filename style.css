@@ -1,0 +1,128 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --coral: #EA5B44;
+  --coral-dark: #C23F2C;
+  --coral-hover: #F16A52;
+  --card: #E8563F;
+  --card-field: #C94E39;
+  --ink: #0C1220;
+  --pill-bg: rgba(10, 16, 26, 0.55);
+  --gold: #F2C14E;
+  --gold-dark: #C9962C;
+}
+
+body {
+  font-family: 'Fredoka', system-ui, sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  color: #fff;
+  background: #0C1220 url('assets/bg-torget.jpg') center/cover no-repeat fixed;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8,14,26,.80), rgba(8,14,26,.55) 45%, rgba(8,14,26,.75));
+  z-index: 0;
+  pointer-events: none;
+}
+
+#game { display: flex; height: 100vh; width: 100vw; position: relative; z-index: 1; }
+
+#photo-panel { flex: 1; position: relative; background: #111; overflow: hidden; }
+/* The app's captured JPEGs carry a stale/incorrect EXIF orientation tag from
+   the phone even though the stored pixels are already right-side up - so
+   force browsers to ignore that tag and render the raw pixels as-is. */
+#photo {
+  width: 100%; height: 100%; object-fit: cover; display: block; image-orientation: none;
+  cursor: zoom-in; transform-origin: 50% 50%; user-select: none;
+}
+
+#hud {
+  position: absolute; top: 14px; left: 14px;
+  display: flex; gap: 10px;
+}
+#hud span {
+  background: var(--pill-bg); color: #fff;
+  padding: 8px 16px; border-radius: 999px;
+  font-weight: 600; font-size: 14px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+#map-panel {
+  width: 380px; position: relative; border-left: 3px solid var(--coral-dark);
+  transition: width .25s ease;
+  z-index: 2;
+}
+#map-panel:hover { width: 60%; }
+#map { width: 100%; height: 100%; }
+
+/* Trim Leaflet's attribution box down so it's a quiet corner label, not a bar. */
+.leaflet-control-attribution {
+  background: rgba(10,16,26,0.55) !important; color: #eee !important;
+  font-size: 5px !important; padding: 0 3px !important; line-height: 1.3 !important;
+}
+.leaflet-control-attribution a { color: #fff !important; }
+
+#guess-btn {
+  position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 1000;
+}
+
+.btn {
+  font-family: 'Fredoka', system-ui, sans-serif;
+  padding: 14px 32px; font-size: 17px; font-weight: 600;
+  background: var(--coral); color: #fff; border: none; border-radius: 999px;
+  cursor: pointer; box-shadow: 0 6px 0 var(--coral-dark);
+  transition: transform .05s ease, box-shadow .05s ease, background .15s ease;
+}
+.btn:hover { background: var(--coral-hover); }
+.btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--coral-dark); }
+.btn:disabled {
+  background: #8a8f99; box-shadow: 0 6px 0 #6b6f78; cursor: not-allowed;
+}
+.btn:disabled:active { transform: none; box-shadow: 0 6px 0 #6b6f78; }
+
+#guess-btn, #next-btn, #start-btn, #restart-btn { }
+
+.hidden { display: none !important; }
+
+#result-modal, #start-modal, #end-modal {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center; z-index: 2000;
+  text-align: center;
+}
+
+/* Start/end screens sit directly on the shared background, like the mockups. */
+#start-modal, #end-modal { flex-direction: column; gap: 8px; }
+
+#start-box h1, #end-box h1 {
+  font-size: 52px; font-weight: 700; letter-spacing: -0.5px;
+  text-shadow: 0 3px 0 rgba(0,0,0,.25);
+  margin-bottom: 4px;
+}
+#start-box p {
+  font-size: 19px; font-weight: 500; color: #F0EDEA;
+  margin-bottom: 28px; max-width: 480px;
+}
+#end-box #final-score {
+  font-size: 20px; font-weight: 600; margin-bottom: 24px; color: #F0EDEA;
+}
+
+/* The result modal floats over the still-live photo/map, so only the card
+   itself should catch clicks/scroll - the invisible backdrop area must let
+   zoom, pan and the map's hover-grow keep working underneath it. */
+#result-modal { pointer-events: none; }
+#result-box {
+  pointer-events: auto;
+  background: var(--card);
+  padding: 32px 40px; border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 10px 0 var(--coral-dark), 0 20px 40px rgba(0,0,0,.4);
+  max-width: 420px;
+}
+#result-box h2 { font-size: 26px; margin-bottom: 14px; }
+#result-box p { margin: 6px 0; font-size: 16px; font-weight: 500; }
+#result-box #next-btn { margin-top: 18px; }

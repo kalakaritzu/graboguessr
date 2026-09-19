@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Core dark palette - the app always renders dark, camera-app style,
+         regardless of system theme, for visual consistency across screens. -->
+    <color name="bg">#10140F</color>
+    <color name="surface">#1A211B</color>
+    <color name="surface_variant">#232C24</color>
+    <color name="on_surface">#F2F6EF</color>
+    <color name="on_surface_muted">#93A38F</color>
+    <color name="outline">#2B362C</color>
+
+    <color name="accent">#33C287</color>
+    <color name="accent_on">#062015</color>
+    <color name="warning">#E3A94C</color>
+    <color name="danger">#E5566A</color>
+
+    <!-- Translucent scrim used for controls floating over the live camera preview. -->
+    <color name="scrim">#CC10140F</color>
+    <color name="scrim_light">#4DFFFFFF</color>
+
+    <!-- Legacy aliases kept for anything still referencing the old names. -->
+    <color name="good_bg">#33C287</color>
+    <color name="retake_bg">#E3A94C</color>
+    <color name="panel_bg">#CC10140F</color>
+    <color name="pending_dot">#E3A94C</color>
+    <color name="done_dot">#33C287</color>
+</resources>

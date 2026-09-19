@@ -1,0 +1,203 @@
+GRÅBOGUESSR - PROJECT BRIEF
+=============================
+(for handoff to Claude Code / another AI coding session)
+
+CONCEPT
+-------
+A GeoGuessr-style game, but scoped to just one small town: Gråbo, Sweden
+(Lerum Municipality, Västra Götaland County). Player is shown a photo taken
+somewhere in Gråbo and must click on a map to guess where it was taken.
+Closer guess = more points. Has both singleplayer and multiplayer modes,
+plus a persistent leaderboard. Must be entirely free to run (no paid APIs,
+no billing accounts).
+
+CURRENT STATE
+-------------
+A basic singleplayer version already exists as a static site in the
+"graboguessr" project folder, built as plain HTML/CSS/JS with no build step:
+
+- index.html   - page structure, start/result/end modals
+- style.css    - layout and styling
+- game.js      - game logic (round flow, scoring, map interaction)
+- spots.js     - the data file listing each photo + its lat/lng
+- README.md    - setup instructions
+- build_spots.py - helper script (see PHOTO PIPELINE below)
+- photos/      - folder where photo files go (currently contains 3 test
+  photos used to verify the EXIF pipeline works - real GPS coordinates
+  confirmed extracted correctly, see PHOTO PIPELINE below)
+- spot_coordinates.csv - list of 50 candidate real-world locations to
+  photograph (see LOCATIONS below)
+- route_order.csv - first pass optimized route through all 50 spots,
+  starting arbitrarily at Stora Lundby kyrka (superseded by
+  route_from_home.csv below - kept only as a reference, not needed)
+- route_from_home.csv - the actual route to use: same 50 spots,
+  re-optimized to start from the user's real home address (see BIKE
+  ROUTE below) - this is the file to follow when going out to take
+  photos
+
+TECH STACK / CONSTRAINTS
+-------------------------
+- Must be 100% free. No Google Maps/Street View API (requires billing
+  account even on free tier) - explicitly rejected by the user.
+- Map library: Leaflet.js + OpenStreetMap tiles (free, no API key).
+- Hosting target: GitHub Pages (static site, free).
+- Photos: the user's own phone photos, NOT Street View or Mapillary
+  (Mapillary coverage of Gråbo was checked and is too sparse - only one
+  road has coverage).
+
+SINGLEPLAYER (already built)
+-----------------------------
+- Click "Start Game" -> randomly picks 5 spots from spots.js
+- Each round: photo displayed on one side, Leaflet map on the other,
+  map opens already centered/zoomed on Gråbo (GRABO_CENTER = [57.8272,
+  12.2916], zoom 14) so the player doesn't have to search for the town.
+- Player clicks a point on the map -> marker appears -> "Make Guess"
+  button enables -> click it to lock in the guess.
+- Distance is calculated via the haversine formula between guess and
+  actual coordinates.
+- Score per round: MAX_POINTS (1000) scaled down linearly to 0 at
+  MAX_DISTANCE_KM (5 km away or more = 0 points). Closer = more points.
+- After 5 rounds, shows total score out of 5000.
+- No login required for singleplayer.
+
+PHOTO PIPELINE (already built)
+--------------------------------
+Photos are taken on the user's Android phone with GPS/location services
+on. JPEG photos embed GPS coordinates in EXIF data automatically. PNG
+does NOT carry this data, so photos must stay as .jpg/.jpeg (not
+converted to PNG).
+
+IMPORTANT: sending a photo through a chat app / messaging service
+typically STRIPS EXIF data (verified: an image sent directly through
+chat had zero EXIF). Workaround confirmed to work: ZIP the photo(s)
+before sending/transferring - a zip is not re-encoded as an image, so
+EXIF survives intact.
+
+build_spots.py:
+- Scans the photos/ folder for .jpg/.jpeg/.png/.heic files
+- Reads GPS lat/lng from each photo's EXIF data (using Pillow /
+  PIL.ExifTags GPSTAGS, converting degrees/minutes/seconds to decimal)
+- Writes spots.js automatically with one entry per photo:
+  { photo: "photos/filename.jpg", lat: X, lng: Y }
+- Skips and reports photos with no GPS data (or all-zero GPS block,
+  which happens when location was off/unavailable at capture time -
+  seen in testing, e.g. a photo with GPSLatitude/Longitude all (0,0,0)
+  and GPSDateStamp 1970:01:01 - a placeholder EXIF block, not real data)
+- Run with: pip install Pillow --break-system-packages && python3
+  build_spots.py
+
+FUTURE IDEA (not yet built): a dedicated Android APK that takes the
+photo, immediately checks if a valid (non-zero) GPS location was
+captured in the resulting JPEG, and if successful automatically moves
+the file into a dedicated folder on the phone (so bad/no-GPS shots are
+caught immediately rather than discovered later). Kept as a "plan for
+later," not started.
+
+LOCATIONS TO PHOTOGRAPH (50 spots)
+------------------------------------
+Researched via Google Places data to ensure all 50 are real, walkable,
+reasonable places to stand and take a photo (not water, not forest, not
+private property) - all within Gråbo's actual town core (roughly lat
+57.826-57.843, lng 12.275-12.305). About 23 of the 50 are real named
+places (Stora Lundby kyrka, Gråbo bibliotek, Gråbo busstation, several
+schools - Ljungviksskolan/Lekstorpsskolan/Röselidsskolan, shops/
+restaurants - Curry King, Lilla Kiosken, Pizzeria Campino, Mjörnbo Cafe,
+Coop Mjörnbotorget, Konsum, Gråbo Blommor, gas stations Preem/Gulf,
+Lekstorps IF sports club, Nya Lundbygården nursing home, Närhälsan
+vårdcentral, Evolution Shop/Arrak Outdoor/DHOF clothing stores). The
+remaining ~27 are named street/area points along real streets (Lundby-
+vägen, Monvägen, Mjörnbo Allé, Kyrkvägen, Aggetorpsvägen, Röselidsvägen,
+Industrivägen, Lekstorpsvägen, etc.) to fill out the spread evenly.
+Full list with lat/lng is in spot_coordinates.csv.
+
+Legal/etiquette note discussed: photographing building exteriors from
+public streets is fine everywhere on the list under Swedish law. Minor
+courtesy notes: avoid schoolyard recess close-ups, avoid focusing on
+nursing home residents - otherwise no restrictions since nothing
+requires entering private property.
+
+BIKE ROUTE (already planned, not yet ridden)
+-----------------------------------------------
+User's home: Södra Annekärrsvägen 4, Gråbo (57.8645285, 12.3209907) -
+notably NOT in the town core, it's ~3-4 km northeast near Källås/
+Annesjön.
+An optimized route (nearest-neighbor + 2-opt heuristic on straight-line
+haversine distance) was computed starting from home through all 50
+spots. Straight-line total ~11 km; real cycling distance will be
+somewhat more. Order is in route_from_home.csv (column stop_number 0
+through 50, 0 = home). Google Maps navigation was found to cap at 9
+extra waypoints (10 total stops) per route, so the full 50-stop route
+can't be loaded as single turn-by-turn navigation - user decided to just
+follow the CSV order manually/visually instead of using turn-by-turn nav.
+
+MULTIPLAYER (planned, NOT yet built)
+---------------------------------------
+Researched real GeoGuessr Duels mechanics for reference: both players
+see the same location, guess simultaneously, round ends once both have
+guessed, damage is based on RELATIVE accuracy (how much better one
+guess was vs the other) with an escalating multiplier, starting HP
+6000, first to 0 HP loses.
+
+For our version, decided to keep it simpler for v1 (no HP/damage
+system):
+- Backend: Firebase Realtime Database (free Spark tier) - the only
+  practical option for a static GitHub Pages site to get realtime sync
+  without running a server.
+- Room system: host creates a room, gets a short code (e.g. 4 letters),
+  shares it with a friend to join.
+- Both players get the same 5 spots in the same order (seeded by the
+  room).
+- A round ends only once BOTH players have submitted a guess.
+- After both guess, show a reveal: both players' guesses plotted on the
+  map alongside the actual location, with distances for each.
+- After 5 rounds, compare total scores - higher total wins. No HP/
+  damage/multiplier system planned for v1 (that's a GeoGuessr-specific
+  mechanic, not required here).
+- Open questions not yet decided: whether to show the opponent's guess
+  live while waiting (vs. only at reveal), whether to add a rematch
+  button, how to handle a player disconnecting mid-game.
+
+ACCOUNTS (planned, NOT yet built)
+-------------------------------------
+- First visit: ask for a username. Behind the scenes, use Firebase
+  Anonymous Authentication to create an account tied to that name.
+- Firebase persists the auth session in the browser (localStorage)
+  automatically, so returning visitors are logged back in without
+  re-entering anything.
+- Explicitly NOT using email/password - no cross-device recovery by
+  design (acceptable tradeoff for a small friend-group game). If the
+  browser data is cleared or they switch device, they'd need a new
+  identity.
+
+LEADERBOARD (planned, NOT yet built)
+------------------------------------------
+- A running currency called "Gråbopoints".
+- Every round played, in EITHER singleplayer or multiplayer, adds that
+  round's points to the logged-in player's lifetime Gråbopoints total
+  in Firebase.
+- A leaderboard page/view reads and sorts all players' totals
+  descending.
+- Same point currency across both modes, so solo practice and
+  multiplayer wins both contribute to overall rank.
+
+WHAT'S LEFT TO BUILD
+------------------------
+1. Firebase project setup (free, needs a Google account, no card) -
+   Realtime Database + Anonymous Auth.
+2. Username entry + anonymous auth flow, persisted login.
+3. Multiplayer room creation/joining UI and Firebase-backed sync logic
+   (multiplayer.js or similar).
+4. Synced round flow: both-players-must-guess-before-reveal logic.
+5. Reveal screen showing both players' guesses + distances at once.
+6. Gråbopoints accumulation logic wired into both singleplayer and
+   multiplayer round completion.
+7. Leaderboard UI (new page or section) reading sorted totals from
+   Firebase.
+8. Once photos are taken (user is doing this - has the 50-spot route
+   planned): run build_spots.py to populate spots.js for real, replacing
+   the current placeholder test entries.
+9. Deploy to GitHub Pages.
+
+Nice-to-have / explicitly deferred: a dedicated Android app for
+photo-capture + auto GPS-validation + auto-move to a folder (see PHOTO
+PIPELINE above) - not started, just an idea to revisit later.

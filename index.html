@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GråboGuessr</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="style.css?v=9">
+</head>
+<body>
+  <div id="game" class="hidden">
+    <div id="photo-panel">
+      <img id="photo" src="" alt="Gissa var i Gråbo detta foto togs">
+      <div id="hud">
+        <span id="round-info">Round 1 / 5</span>
+        <span id="score-info">Score: 0</span>
+      </div>
+    </div>
+    <div id="map-panel">
+      <div id="map"></div>
+      <button id="guess-btn" class="btn" disabled>Gissa</button>
+    </div>
+  </div>
+
+  <div id="result-modal" class="hidden">
+    <div id="result-box">
+      <h2 id="result-title"></h2>
+      <p id="result-distance"></p>
+      <p id="result-points"></p>
+      <button id="next-btn" class="btn">Nästa runda</button>
+    </div>
+  </div>
+
+  <div id="start-modal">
+    <div id="start-box">
+      <h1>GråboGuessr</h1>
+      <p>Gissa var i Gråbo varje foto togs. Närmare gissningar ger fler poäng.</p>
+      <button id="start-btn" class="btn">Starta spelet</button>
+    </div>
+  </div>
+
+  <div id="end-modal" class="hidden">
+    <div id="end-box">
+      <h1>Spelet slut</h1>
+      <p id="final-score"></p>
+      <button id="restart-btn" class="btn">Spela igen</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="spots.js?v=3"></script>
+  <script src="game.js?v=7"></script>
+</body>
+</html>
