@@ -166,6 +166,7 @@ window.addEventListener('mouseup', () => {
 
 function makeGuess() {
   roundLocked = true;
+  document.getElementById('guess-btn').disabled = true;
   const spot = SPOTS[order[round]];
   const dist = haversine(guessLatLng.lat, guessLatLng.lng, spot.lat, spot.lng);
   const points = Math.max(0, Math.round(MAX_POINTS * (1 - dist / MAX_DISTANCE_KM)));
