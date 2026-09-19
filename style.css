@@ -31,33 +31,33 @@ body::before {
 
 #game, #mp-game { display: flex; height: 100vh; width: 100vw; position: relative; z-index: 1; }
 
-#photo-panel { flex: 1; position: relative; background: #111; overflow: hidden; }
+#photo-panel, .photo-panel { flex: 1; position: relative; background: #111; overflow: hidden; }
 /* The app's captured JPEGs carry a stale/incorrect EXIF orientation tag from
    the phone even though the stored pixels are already right-side up - so
    force browsers to ignore that tag and render the raw pixels as-is. */
-#photo {
+#photo, #mp-photo {
   width: 100%; height: 100%; object-fit: cover; display: block; image-orientation: none;
   cursor: zoom-in; transform-origin: 50% 50%; user-select: none;
 }
 
-#hud {
+#hud, .hud {
   position: absolute; top: 14px; left: 14px;
   display: flex; gap: 10px;
 }
-#hud span {
+#hud span, .hud span {
   background: var(--pill-bg); color: #fff;
   padding: 8px 16px; border-radius: 999px;
   font-weight: 600; font-size: 14px;
   border: 1px solid rgba(255,255,255,0.15);
 }
 
-#map-panel {
+#map-panel, .map-panel {
   width: 380px; position: relative; border-left: 3px solid var(--coral-dark);
   transition: width .25s ease;
   z-index: 2;
 }
-#map-panel:hover { width: 60%; }
-#map { width: 100%; height: 100%; }
+#map-panel:hover, .map-panel:hover { width: 60%; }
+#map, #mp-map { width: 100%; height: 100%; }
 
 /* Trim Leaflet's attribution box down so it's a quiet corner label, not a bar. */
 .leaflet-control-attribution {
@@ -114,7 +114,7 @@ body::before {
 /* Start/end screens sit directly on the shared background, like the mockups. */
 #start-modal, #end-modal { flex-direction: column; gap: 8px; }
 
-#start-box h1, #end-box h1 {
+#start-box h1, #end-box h1, .end-box h1 {
   font-size: 52px; font-weight: 700; letter-spacing: -0.5px;
   text-shadow: 0 3px 0 rgba(0,0,0,.25);
   margin-bottom: 4px;
@@ -126,12 +126,17 @@ body::before {
 #end-box #final-score {
   font-size: 20px; font-weight: 600; margin-bottom: 24px; color: #F0EDEA;
 }
+.end-box { background: var(--card); padding: 32px 40px; border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 10px 0 var(--coral-dark), 0 20px 40px rgba(0,0,0,.4);
+  max-width: 420px;
+}
 
 /* The result modal floats over the still-live photo/map, so only the card
    itself should catch clicks/scroll - the invisible backdrop area must let
    zoom, pan and the map's hover-grow keep working underneath it. */
-#result-modal { pointer-events: none; }
-#result-box {
+#result-modal, #mp-result-modal { pointer-events: none; }
+#result-box, .result-box {
   pointer-events: auto;
   background: var(--card);
   padding: 32px 40px; border-radius: 24px;
@@ -139,9 +144,10 @@ body::before {
   box-shadow: 0 10px 0 var(--coral-dark), 0 20px 40px rgba(0,0,0,.4);
   max-width: 420px;
 }
-#result-box h2 { font-size: 26px; margin-bottom: 14px; }
-#result-box p { margin: 6px 0; font-size: 16px; font-weight: 500; }
+#result-box h2, .result-box h2 { font-size: 26px; margin-bottom: 14px; }
+#result-box p, .result-box p { margin: 6px 0; font-size: 16px; font-weight: 500; }
 #result-box #next-btn { margin-top: 18px; }
+.result-box #mp-next-btn { margin-top: 18px; }
 #mp-result-text { margin: 6px 0 4px; font-size: 16px; font-weight: 500; text-align: left; }
 #mp-result-text div { margin: 4px 0; }
 #mp-result-waiting { font-size: 14px; color: #F0EDEA; margin: 10px 0; }

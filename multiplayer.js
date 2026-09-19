@@ -133,7 +133,13 @@ function startMpRound(data) {
 }
 
 function ensureMpMap() {
-  if (mpMap) return;
+  if (mpMap) {
+    // The container was hidden (display:none) until showScreen() just ran,
+    // so Leaflet may have measured 0x0 if it was ever touched while hidden -
+    // force it to re-measure now that it's actually visible.
+    setTimeout(() => mpMap.invalidateSize(), 0);
+    return;
+  }
   mpMap = L.map('mp-map').setView(GRABO_CENTER, 14);
   mpMap.attributionControl.setPrefix(false);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -146,6 +152,7 @@ function ensureMpMap() {
     mpGuessMarker = L.marker(mpGuessLatLng).addTo(mpMap);
     document.getElementById('mp-guess-btn').disabled = false;
   });
+  setTimeout(() => mpMap.invalidateSize(), 0);
 }
 
 function clearMpOverlays() {

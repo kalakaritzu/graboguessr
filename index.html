@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="style.css?v=10">
+<link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
 
@@ -121,13 +121,13 @@
 
   <!-- Multiplayer game screen -->
   <div id="mp-game" class="hidden">
-    <div id="photo-panel">
+    <div class="photo-panel">
       <img id="mp-photo" src="" alt="Gissa var i Gråbo detta foto togs">
-      <div id="hud">
+      <div class="hud">
         <span id="mp-round-info">Runda 1 / 5</span>
       </div>
     </div>
-    <div id="map-panel">
+    <div class="map-panel">
       <div id="mp-map"></div>
       <button id="mp-guess-btn" class="btn" disabled>Gissa</button>
     </div>
@@ -135,7 +135,7 @@
 
   <!-- Multiplayer: round reveal -->
   <div id="mp-result-modal" class="hidden">
-    <div id="result-box">
+    <div class="result-box">
       <h2>Rundans resultat</h2>
       <div id="mp-result-text"></div>
       <p id="mp-result-waiting" class="hidden">Väntar på att värden ska fortsätta…</p>
@@ -145,7 +145,7 @@
 
   <!-- Multiplayer: final standings -->
   <div id="mp-final-modal" class="hidden">
-    <div id="end-box">
+    <div class="end-box">
       <h1>Spelet slut</h1>
       <ul id="mp-final-list"></ul>
       <button id="mp-final-close" class="btn">Klar</button>
@@ -161,6 +161,6 @@
   <script src="leaderboard.js"></script>
   <script src="spots.js?v=3"></script>
   <script src="game.js?v=8"></script>
-  <script src="multiplayer.js"></script>
+  <script src="multiplayer.js?v=2"></script>
 </body>
 </html>
