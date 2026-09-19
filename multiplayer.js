@@ -18,6 +18,11 @@ let mpIsHost = false;
 let mpCurrentRound = -1;
 let mpLatestRoomData = null; // kept in sync by the room's onSnapshot listener
 
+// game.js defines setupPhotoZoom() and calls it once for singleplayer's
+// #photo - reuse it here so multiplayer's photo gets the same scroll-zoom
+// and click-drag pan instead of being stuck static.
+const resetMpPhotoZoom = setupPhotoZoom('mp-photo', '#mp-game .photo-panel');
+
 function randomRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I ambiguity
   let code = '';
@@ -40,28 +45,41 @@ document.getElementById('mp-back-btn').addEventListener('click', () => showScree
 document.getElementById('mp-create-btn').addEventListener('click', createRoom);
 document.getElementById('mp-join-btn').addEventListener('click', joinRoom);
 
+function showMpLoading(text) {
+  document.getElementById('mp-loading-text').textContent = text;
+  document.getElementById('mp-loading').classList.remove('hidden');
+}
+function hideMpLoading() {
+  document.getElementById('mp-loading').classList.add('hidden');
+}
+
 async function createRoom() {
   if (!currentUser) return;
-  const order = shuffle([...Array(SPOTS.length).keys()]).slice(0, ROUNDS);
+  showMpLoading('Skapar rum…');
+  try {
+    const order = shuffle([...Array(SPOTS.length).keys()]).slice(0, ROUNDS);
 
-  let code, ref, snap;
-  for (let attempt = 0; attempt < 5; attempt++) {
-    code = randomRoomCode();
-    ref = db.collection('rooms').doc(code);
-    snap = await ref.get();
-    if (!snap.exists) break;
+    let code, ref, snap;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      code = randomRoomCode();
+      ref = db.collection('rooms').doc(code);
+      snap = await ref.get();
+      if (!snap.exists) break;
+    }
+
+    await ref.set({
+      hostUid: currentUser.uid,
+      status: 'lobby',
+      round: 0,
+      spotOrder: order,
+      players: { [currentUser.uid]: { name: currentUser.name, totalPoints: 0 } },
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    mpIsHost = true;
+    enterRoom(code);
+  } finally {
+    hideMpLoading();
   }
-
-  await ref.set({
-    hostUid: currentUser.uid,
-    status: 'lobby',
-    round: 0,
-    spotOrder: order,
-    players: { [currentUser.uid]: { name: currentUser.name, totalPoints: 0 } },
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-  mpIsHost = true;
-  enterRoom(code);
 }
 
 async function joinRoom() {
@@ -69,17 +87,22 @@ async function joinRoom() {
   const code = document.getElementById('mp-join-code').value.trim().toUpperCase();
   if (!code) return;
 
-  const ref = db.collection('rooms').doc(code);
-  const snap = await ref.get();
-  if (!snap.exists) { alert('Hittade inget rum med den koden.'); return; }
-  const data = snap.data();
-  if (data.status !== 'lobby') { alert('Rundan har redan startat.'); return; }
+  showMpLoading('Går med i rummet…');
+  try {
+    const ref = db.collection('rooms').doc(code);
+    const snap = await ref.get();
+    if (!snap.exists) { alert('Hittade inget rum med den koden.'); return; }
+    const data = snap.data();
+    if (data.status !== 'lobby') { alert('Rundan har redan startat.'); return; }
 
-  await ref.update({
-    [`players.${currentUser.uid}`]: { name: currentUser.name, totalPoints: 0 }
-  });
-  mpIsHost = data.hostUid === currentUser.uid;
-  enterRoom(code);
+    await ref.update({
+      [`players.${currentUser.uid}`]: { name: currentUser.name, totalPoints: 0 }
+    });
+    mpIsHost = data.hostUid === currentUser.uid;
+    enterRoom(code);
+  } finally {
+    hideMpLoading();
+  }
 }
 
 function enterRoom(code) {
@@ -119,7 +142,12 @@ function renderLobbyPlayers(players) {
 }
 
 document.getElementById('lobby-start-btn').addEventListener('click', async () => {
-  await mpRoomRef.update({ status: 'playing', round: 0 });
+  showMpLoading('Startar spelet…');
+  try {
+    await mpRoomRef.update({ status: 'playing', round: 0 });
+  } finally {
+    hideMpLoading();
+  }
 });
 document.getElementById('lobby-leave-btn').addEventListener('click', () => {
   leaveRoomCleanup();
@@ -183,6 +211,7 @@ function loadMpRound(data) {
   mpMap.setView(GRABO_CENTER, 14);
   document.getElementById('mp-guess-btn').disabled = true;
 
+  resetMpPhotoZoom();
   const spot = SPOTS[data.spotOrder[data.round]];
   document.getElementById('mp-photo').src = spot.photo;
   document.getElementById('mp-round-info').textContent = `Runda ${data.round + 1} / ${data.spotOrder.length}`;

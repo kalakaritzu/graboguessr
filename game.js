@@ -85,84 +85,92 @@ function loadRound() {
 
 // Scroll-to-zoom on the photo, centered on the cursor, plus click-and-drag
 // panning once zoomed in - lets you lean in on signs, plates, storefronts
-// etc. for clues without leaving the round.
-const photoEl = document.getElementById('photo');
-const photoPanel = document.getElementById('photo-panel');
-photoEl.draggable = false;
-photoEl.style.transformOrigin = '50% 50%';
+// etc. for clues without leaving the round. Shared by singleplayer and
+// multiplayer's photo panels (each gets its own independent zoom/pan state),
+// since multiplayer.js calls this again for #mp-photo.
+function setupPhotoZoom(imgId, panelSelector) {
+  const photoEl = document.getElementById(imgId);
+  const photoPanel = document.querySelector(panelSelector);
+  photoEl.draggable = false;
+  photoEl.style.transformOrigin = '50% 50%';
 
-let photoZoom = 1;
-let panX = 0;
-let panY = 0;
-const MIN_ZOOM = 1;
-const MAX_ZOOM = 4;
+  let photoZoom = 1;
+  let panX = 0;
+  let panY = 0;
+  const MIN_ZOOM = 1;
+  const MAX_ZOOM = 4;
 
-function applyPhotoTransform() {
-  photoEl.style.transform = `translate(${panX}px, ${panY}px) scale(${photoZoom})`;
-  photoEl.style.cursor = photoZoom > 1 ? 'grab' : 'zoom-in';
+  function applyPhotoTransform() {
+    photoEl.style.transform = `translate(${panX}px, ${panY}px) scale(${photoZoom})`;
+    photoEl.style.cursor = photoZoom > 1 ? 'grab' : 'zoom-in';
+  }
+
+  function clampPan() {
+    const rect = photoPanel.getBoundingClientRect();
+    const maxX = (photoZoom - 1) * rect.width / 2;
+    const maxY = (photoZoom - 1) * rect.height / 2;
+    panX = Math.min(maxX, Math.max(-maxX, panX));
+    panY = Math.min(maxY, Math.max(-maxY, panY));
+  }
+
+  function reset() {
+    photoZoom = 1;
+    panX = 0;
+    panY = 0;
+    applyPhotoTransform();
+  }
+
+  photoPanel.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const rect = photoPanel.getBoundingClientRect();
+    const cx = e.clientX - rect.left - rect.width / 2;
+    const cy = e.clientY - rect.top - rect.height / 2;
+
+    // Point under the cursor, in unscaled image space, before this zoom step.
+    const imgX = (cx - panX) / photoZoom;
+    const imgY = (cy - panY) / photoZoom;
+
+    photoZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, photoZoom - e.deltaY * 0.0015 * photoZoom));
+
+    // Re-solve pan so that same image point stays under the cursor.
+    panX = cx - imgX * photoZoom;
+    panY = cy - imgY * photoZoom;
+    clampPan();
+    applyPhotoTransform();
+  }, { passive: false });
+
+  let dragging = false;
+  let dragStartX = 0, dragStartY = 0, panStartX = 0, panStartY = 0;
+
+  photoPanel.addEventListener('mousedown', (e) => {
+    if (photoZoom <= 1) return;
+    dragging = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    panStartX = panX;
+    panStartY = panY;
+    photoEl.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    panX = panStartX + (e.clientX - dragStartX);
+    panY = panStartY + (e.clientY - dragStartY);
+    clampPan();
+    applyPhotoTransform();
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    photoEl.style.cursor = photoZoom > 1 ? 'grab' : 'zoom-in';
+  });
+
+  return reset;
 }
 
-function clampPan() {
-  const rect = photoPanel.getBoundingClientRect();
-  const maxX = (photoZoom - 1) * rect.width / 2;
-  const maxY = (photoZoom - 1) * rect.height / 2;
-  panX = Math.min(maxX, Math.max(-maxX, panX));
-  panY = Math.min(maxY, Math.max(-maxY, panY));
-}
-
-function resetPhotoZoom() {
-  photoZoom = 1;
-  panX = 0;
-  panY = 0;
-  applyPhotoTransform();
-}
-
-photoPanel.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  const rect = photoPanel.getBoundingClientRect();
-  const cx = e.clientX - rect.left - rect.width / 2;
-  const cy = e.clientY - rect.top - rect.height / 2;
-
-  // Point under the cursor, in unscaled image space, before this zoom step.
-  const imgX = (cx - panX) / photoZoom;
-  const imgY = (cy - panY) / photoZoom;
-
-  photoZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, photoZoom - e.deltaY * 0.0015 * photoZoom));
-
-  // Re-solve pan so that same image point stays under the cursor.
-  panX = cx - imgX * photoZoom;
-  panY = cy - imgY * photoZoom;
-  clampPan();
-  applyPhotoTransform();
-}, { passive: false });
-
-let dragging = false;
-let dragStartX = 0, dragStartY = 0, panStartX = 0, panStartY = 0;
-
-photoPanel.addEventListener('mousedown', (e) => {
-  if (photoZoom <= 1) return;
-  dragging = true;
-  dragStartX = e.clientX;
-  dragStartY = e.clientY;
-  panStartX = panX;
-  panStartY = panY;
-  photoEl.style.cursor = 'grabbing';
-  e.preventDefault();
-});
-
-window.addEventListener('mousemove', (e) => {
-  if (!dragging) return;
-  panX = panStartX + (e.clientX - dragStartX);
-  panY = panStartY + (e.clientY - dragStartY);
-  clampPan();
-  applyPhotoTransform();
-});
-
-window.addEventListener('mouseup', () => {
-  if (!dragging) return;
-  dragging = false;
-  photoEl.style.cursor = photoZoom > 1 ? 'grab' : 'zoom-in';
-});
+const resetPhotoZoom = setupPhotoZoom('photo', '#photo-panel');
 
 function makeGuess() {
   roundLocked = true;
