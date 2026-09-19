@@ -8,9 +8,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
+
+  <!-- Singleplayer game screen -->
   <div id="game" class="hidden">
     <div id="photo-panel">
       <img id="photo" src="" alt="Gissa var i Gråbo detta foto togs">
@@ -34,11 +36,24 @@
     </div>
   </div>
 
+  <!-- Start screen -->
   <div id="start-modal">
+    <div id="top-pills">
+      <div class="pill" id="user-pill">
+        <span id="user-pill-name">Spelare</span>
+      </div>
+      <button class="pill pill-btn" id="leaderboard-btn">
+        <span class="coin-icon">●</span>
+        <span id="points-display">0</span>
+      </button>
+    </div>
     <div id="start-box">
       <h1>GråboGuessr</h1>
       <p>Gissa var i Gråbo varje foto togs. Närmare gissningar ger fler poäng.</p>
-      <button id="start-btn" class="btn">Starta spelet</button>
+      <div class="start-actions">
+        <button id="start-btn" class="btn">Enkelspelarspel</button>
+        <button id="multiplayer-btn" class="btn btn-outline">Flerspelarläge</button>
+      </div>
     </div>
   </div>
 
@@ -50,8 +65,102 @@
     </div>
   </div>
 
+  <!-- Username entry (first visit only) -->
+  <div id="username-modal" class="hidden">
+    <div id="username-box">
+      <h1>Vem spelar?</h1>
+      <p>Välj ett namn för topplistan. Du loggas in automatiskt nästa gång.</p>
+      <form id="username-form">
+        <input id="username-input" type="text" maxlength="24" placeholder="Ditt namn" autocomplete="off" required>
+        <button id="username-submit" type="submit" class="btn">Klar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Leaderboard -->
+  <div id="leaderboard-modal" class="hidden">
+    <div id="leaderboard-box">
+      <h2>Topplista</h2>
+      <ul id="leaderboard-list"></ul>
+      <button id="leaderboard-close" class="btn">Stäng</button>
+    </div>
+  </div>
+
+  <!-- Multiplayer: create/join -->
+  <div id="multiplayer-modal" class="hidden">
+    <div id="multiplayer-box">
+      <h2>Flerspelarläge</h2>
+
+      <div class="mp-section">
+        <button id="mp-create-btn" class="btn">Skapa rum</button>
+      </div>
+
+      <div class="mp-divider">eller</div>
+
+      <div class="mp-section mp-join-row">
+        <input id="mp-join-code" type="text" maxlength="4" placeholder="KOD" autocomplete="off">
+        <button id="mp-join-btn" class="btn btn-outline">Gå med</button>
+      </div>
+
+      <button id="mp-back-btn" class="btn btn-text">Tillbaka</button>
+    </div>
+  </div>
+
+  <!-- Multiplayer: lobby -->
+  <div id="lobby-modal" class="hidden">
+    <div id="lobby-box">
+      <h2>Mitt rum</h2>
+      <div class="lobby-code-label">Kod</div>
+      <div id="lobby-code"></div>
+      <div class="lobby-code-label">Spelare</div>
+      <ul id="lobby-players"></ul>
+      <button id="lobby-start-btn" class="btn hidden" disabled>Starta</button>
+      <button id="lobby-leave-btn" class="btn btn-text">Lämna</button>
+    </div>
+  </div>
+
+  <!-- Multiplayer game screen -->
+  <div id="mp-game" class="hidden">
+    <div id="photo-panel">
+      <img id="mp-photo" src="" alt="Gissa var i Gråbo detta foto togs">
+      <div id="hud">
+        <span id="mp-round-info">Runda 1 / 5</span>
+      </div>
+    </div>
+    <div id="map-panel">
+      <div id="mp-map"></div>
+      <button id="mp-guess-btn" class="btn" disabled>Gissa</button>
+    </div>
+  </div>
+
+  <!-- Multiplayer: round reveal -->
+  <div id="mp-result-modal" class="hidden">
+    <div id="result-box">
+      <h2>Rundans resultat</h2>
+      <div id="mp-result-text"></div>
+      <p id="mp-result-waiting" class="hidden">Väntar på att värden ska fortsätta…</p>
+      <button id="mp-next-btn" class="btn">Nästa runda</button>
+    </div>
+  </div>
+
+  <!-- Multiplayer: final standings -->
+  <div id="mp-final-modal" class="hidden">
+    <div id="end-box">
+      <h1>Spelet slut</h1>
+      <ul id="mp-final-list"></ul>
+      <button id="mp-final-close" class="btn">Klar</button>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="auth.js"></script>
+  <script src="leaderboard.js"></script>
   <script src="spots.js?v=3"></script>
-  <script src="game.js?v=7"></script>
+  <script src="game.js?v=8"></script>
+  <script src="multiplayer.js"></script>
 </body>
 </html>

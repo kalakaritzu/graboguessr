@@ -170,6 +170,7 @@ function makeGuess() {
   const dist = haversine(guessLatLng.lat, guessLatLng.lng, spot.lat, spot.lng);
   const points = Math.max(0, Math.round(MAX_POINTS * (1 - dist / MAX_DISTANCE_KM)));
   score += points;
+  if (typeof addPoints === 'function') addPoints(points); // Gråbopoäng - counts from singleplayer too
 
   actualMarker = L.marker([spot.lat, spot.lng], {
     icon: L.icon({
