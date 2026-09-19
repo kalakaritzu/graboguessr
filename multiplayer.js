@@ -160,6 +160,14 @@ function ensureMpMap() {
     document.getElementById('mp-guess-btn').disabled = false;
   });
   setTimeout(() => mpMap.invalidateSize(), 0);
+
+  // Unlike singleplayer's #map-panel (an id, hooked up once in game.js), this
+  // panel is only a class - game.js's hover-grow listener can't see it, so
+  // without this Leaflet never redraws when the panel widens on hover and
+  // the newly revealed area stays blank/offset.
+  document.querySelector('#mp-game .map-panel').addEventListener('transitionend', (e) => {
+    if (e.propertyName === 'width') mpMap.invalidateSize();
+  });
 }
 
 function clearMpOverlays() {
