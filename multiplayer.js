@@ -250,7 +250,11 @@ function checkRoundComplete(data, guessesSnap) {
   nextBtn.classList.toggle('hidden', !mpIsHost);
   nextBtn.textContent = isLastRound ? 'Visa slutresultat' : 'Nästa runda';
   document.getElementById('mp-result-waiting').classList.toggle('hidden', mpIsHost);
-  showScreen('mp-result-modal');
+  // Don't showScreen() here - that hides every other screen including
+  // mp-game, wiping out the map we just drew both players' pins on. The
+  // reveal card should float over the still-visible map/photo, exactly
+  // like singleplayer's result-modal does over #game.
+  document.getElementById('mp-result-modal').classList.remove('hidden');
 }
 
 document.getElementById('mp-next-btn').addEventListener('click', async () => {
