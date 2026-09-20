@@ -46,6 +46,34 @@ function createRoundTimer(displayEl, onExpire) {
   return { start, stop };
 }
 
+// A row of pill buttons where exactly one is "active" - replaces native
+// <select> for settings so they fit the game's own rounded-pill look
+// instead of default browser dropdown chrome. Shared by singleplayer and
+// multiplayer's settings rows.
+function setupSegmentedControl(groupEl, onChange) {
+  const buttons = Array.from(groupEl.querySelectorAll('.seg-btn'));
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (btn.disabled || btn.classList.contains('active')) return;
+      buttons.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      onChange(btn.dataset.value);
+    });
+  });
+  return {
+    getValue() {
+      const active = groupEl.querySelector('.seg-btn.active');
+      return active ? active.dataset.value : null;
+    },
+    setValue(value) {
+      buttons.forEach((b) => b.classList.toggle('active', b.dataset.value === String(value)));
+    },
+    setDisabled(disabled) {
+      buttons.forEach((b) => { b.disabled = disabled; });
+    }
+  };
+}
+
 function initMap() {
   map = L.map('map').setView(GRABO_CENTER, 14);
   // Keep the required OpenStreetMap credit but drop Leaflet's own "Leaflet" self-promo prefix.
@@ -90,10 +118,14 @@ function shuffle(arr) {
   return a;
 }
 
+const spTimerControl = setupSegmentedControl(document.getElementById('sp-setting-timer'), () => {});
+const spRoundsControl = setupSegmentedControl(document.getElementById('sp-setting-rounds'), () => {});
+const spDifficultyControl = setupSegmentedControl(document.getElementById('sp-setting-difficulty'), () => {});
+
 function startGame() {
-  ROUNDS = Math.min(Number(document.getElementById('sp-setting-rounds').value), SPOTS.length);
-  spDifficulty = document.getElementById('sp-setting-difficulty').value;
-  spTimerSeconds = Number(document.getElementById('sp-setting-timer').value);
+  ROUNDS = Math.min(Number(spRoundsControl.getValue()), SPOTS.length);
+  spDifficulty = spDifficultyControl.getValue();
+  spTimerSeconds = Number(spTimerControl.getValue());
   score = 0;
   round = 0;
   order = shuffle([...Array(SPOTS.length).keys()]).slice(0, ROUNDS);
@@ -274,6 +306,13 @@ document.getElementById('start-btn').addEventListener('click', startGame);
 document.getElementById('restart-btn').addEventListener('click', startGame);
 document.getElementById('guess-btn').addEventListener('click', makeGuess);
 document.getElementById('next-btn').addEventListener('click', nextRound);
+
+document.getElementById('about-btn').addEventListener('click', () => {
+  document.getElementById('about-modal').classList.remove('hidden');
+});
+document.getElementById('about-close').addEventListener('click', () => {
+  document.getElementById('about-modal').classList.add('hidden');
+});
 
 document.getElementById('quit-btn').addEventListener('click', () => {
   if (!confirm('Avsluta spelet?')) return;

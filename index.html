@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="style.css?v=15">
+<link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
 
@@ -46,6 +46,7 @@
   <div id="start-modal">
     <div id="top-pills">
       <div class="pill" id="user-pill">
+        <span class="pill-avatar" id="user-pill-avatar">?</span>
         <span id="user-pill-name">Spelare</span>
       </div>
       <button class="pill pill-btn" id="leaderboard-btn">
@@ -55,34 +56,34 @@
     </div>
     <div id="start-box">
       <h1>GråboGuessr</h1>
-      <p>Gissa var i Gråbo varje foto togs. Närmare gissningar ger fler poäng.</p>
+      <p>Hur väl känner du till Gråbo?</p>
 
       <div id="sp-settings">
         <div class="lobby-setting-row">
-          <label for="sp-setting-timer">Tid per runda</label>
-          <select id="sp-setting-timer">
-            <option value="30">30s</option>
-            <option value="60" selected>60s</option>
-            <option value="90">90s</option>
-            <option value="0">Ingen gräns</option>
-          </select>
+          <label>Tid per runda</label>
+          <div class="seg-group" id="sp-setting-timer">
+            <button type="button" class="seg-btn" data-value="30">30s</button>
+            <button type="button" class="seg-btn active" data-value="60">60s</button>
+            <button type="button" class="seg-btn" data-value="90">90s</button>
+            <button type="button" class="seg-btn" data-value="0" title="Ingen gräns">∞</button>
+          </div>
         </div>
         <div class="lobby-setting-row">
-          <label for="sp-setting-rounds">Antal rundor</label>
-          <select id="sp-setting-rounds">
-            <option value="3">3</option>
-            <option value="5" selected>5</option>
-            <option value="7">7</option>
-            <option value="10">10</option>
-          </select>
+          <label>Antal rundor</label>
+          <div class="seg-group" id="sp-setting-rounds">
+            <button type="button" class="seg-btn" data-value="3">3</button>
+            <button type="button" class="seg-btn active" data-value="5">5</button>
+            <button type="button" class="seg-btn" data-value="7">7</button>
+            <button type="button" class="seg-btn" data-value="10">10</button>
+          </div>
         </div>
         <div class="lobby-setting-row">
-          <label for="sp-setting-difficulty">Svårighetsgrad</label>
-          <select id="sp-setting-difficulty">
-            <option value="easy" selected>Lätt</option>
-            <option value="medium">Medel</option>
-            <option value="hard">Svår</option>
-          </select>
+          <label>Svårighetsgrad</label>
+          <div class="seg-group" id="sp-setting-difficulty">
+            <button type="button" class="seg-btn active" data-value="easy">Lätt</button>
+            <button type="button" class="seg-btn" data-value="medium">Medel</button>
+            <button type="button" class="seg-btn" data-value="hard">Svår</button>
+          </div>
         </div>
       </div>
 
@@ -90,6 +91,19 @@
         <button id="start-btn" class="btn">Enkelspelarspel</button>
         <button id="multiplayer-btn" class="btn btn-outline">Flerspelarläge</button>
       </div>
+
+      <button type="button" id="about-btn" class="text-link">Läs mer</button>
+    </div>
+  </div>
+
+  <!-- About / rules info, opened via "Läs mer" -->
+  <div id="about-modal" class="hidden">
+    <div id="about-box">
+      <h2>Om GråboGuessr</h2>
+      <p>Fem foton, tagna runt om i Gråbo. Du placerar en nål på kartan där du tror bilden togs - ju närmare, desto fler poäng.</p>
+      <p>Flerspelarläge låter dig och en vän tävla i samma rundor i realtid, med egna inställningar för antal rundor, tid per runda och svårighetsgrad.</p>
+      <p>Dina Gråbopoäng sparas mellan omgångar och syns på topplistan.</p>
+      <button type="button" id="about-close" class="btn">Stäng</button>
     </div>
   </div>
 
@@ -154,30 +168,30 @@
       <div class="lobby-code-label">Inställningar</div>
       <div id="lobby-settings">
         <div class="lobby-setting-row">
-          <label for="setting-timer">Tid per runda</label>
-          <select id="setting-timer">
-            <option value="30">30s</option>
-            <option value="60" selected>60s</option>
-            <option value="90">90s</option>
-            <option value="0">Ingen gräns</option>
-          </select>
+          <label>Tid per runda</label>
+          <div class="seg-group" id="setting-timer">
+            <button type="button" class="seg-btn" data-value="30">30s</button>
+            <button type="button" class="seg-btn active" data-value="60">60s</button>
+            <button type="button" class="seg-btn" data-value="90">90s</button>
+            <button type="button" class="seg-btn" data-value="0" title="Ingen gräns">∞</button>
+          </div>
         </div>
         <div class="lobby-setting-row">
-          <label for="setting-rounds">Antal rundor</label>
-          <select id="setting-rounds">
-            <option value="3">3</option>
-            <option value="5" selected>5</option>
-            <option value="7">7</option>
-            <option value="10">10</option>
-          </select>
+          <label>Antal rundor</label>
+          <div class="seg-group" id="setting-rounds">
+            <button type="button" class="seg-btn" data-value="3">3</button>
+            <button type="button" class="seg-btn active" data-value="5">5</button>
+            <button type="button" class="seg-btn" data-value="7">7</button>
+            <button type="button" class="seg-btn" data-value="10">10</button>
+          </div>
         </div>
         <div class="lobby-setting-row">
-          <label for="setting-difficulty">Svårighetsgrad</label>
-          <select id="setting-difficulty">
-            <option value="easy" selected>Lätt</option>
-            <option value="medium">Medel</option>
-            <option value="hard">Svår</option>
-          </select>
+          <label>Svårighetsgrad</label>
+          <div class="seg-group" id="setting-difficulty">
+            <button type="button" class="seg-btn active" data-value="easy">Lätt</button>
+            <button type="button" class="seg-btn" data-value="medium">Medel</button>
+            <button type="button" class="seg-btn" data-value="hard">Svår</button>
+          </div>
         </div>
       </div>
 
@@ -235,10 +249,10 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script src="auth.js"></script>
+  <script src="auth.js?v=2"></script>
   <script src="leaderboard.js"></script>
   <script src="spots.js?v=3"></script>
-  <script src="game.js?v=12"></script>
-  <script src="multiplayer.js?v=10"></script>
+  <script src="game.js?v=13"></script>
+  <script src="multiplayer.js?v=11"></script>
 </body>
 </html>

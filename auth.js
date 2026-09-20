@@ -34,9 +34,11 @@ async function ensureUserDoc(uid, name) {
 
 function updatePointsDisplay() {
   const nameEl = document.getElementById('user-pill-name');
+  const avatarEl = document.getElementById('user-pill-avatar');
   const pointsEl = document.getElementById('points-display');
   if (!currentUser) return;
   if (nameEl) nameEl.textContent = currentUser.name;
+  if (avatarEl) avatarEl.textContent = currentUser.name.trim().charAt(0).toUpperCase() || '?';
   if (pointsEl) pointsEl.textContent = `${currentUser.points}`;
 }
 

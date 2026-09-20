@@ -128,6 +128,10 @@ function handleRoomUpdate(snap) {
   if (!snap.exists) return;
   const data = snap.data();
   mpLatestRoomData = data;
+  // Keep this live rather than only setting it once at join time, so that
+  // if the host leaves (see leaveMpRoom) and hostUid gets reassigned, the
+  // promoted player's client actually learns it now controls the room.
+  mpIsHost = data.hostUid === currentUser.uid;
 
   if (data.status === 'lobby') {
     renderLobbyPlayers(data.players);
@@ -152,31 +156,31 @@ function renderLobbyPlayers(players) {
   });
 }
 
-// Only the host can change these - everyone else just sees them update live
-// (synced through the room doc) so they know what they're about to play.
-function renderLobbySettings(settings) {
-  const timerSel = document.getElementById('setting-timer');
-  const roundsSel = document.getElementById('setting-rounds');
-  const diffSel = document.getElementById('setting-difficulty');
-  timerSel.value = String(settings.timerSeconds);
-  roundsSel.value = String(settings.roundCount);
-  diffSel.value = settings.difficulty;
-  [timerSel, roundsSel, diffSel].forEach((el) => { el.disabled = !mpIsHost; });
-}
-
 function updateMpSetting(key, value) {
   if (!mpIsHost || !mpRoomRef) return;
   mpRoomRef.update({ [`settings.${key}`]: value });
 }
-document.getElementById('setting-timer').addEventListener('change', (e) => {
-  updateMpSetting('timerSeconds', Number(e.target.value));
+
+const mpTimerControl = setupSegmentedControl(document.getElementById('setting-timer'), (value) => {
+  updateMpSetting('timerSeconds', Number(value));
 });
-document.getElementById('setting-rounds').addEventListener('change', (e) => {
-  updateMpSetting('roundCount', Number(e.target.value));
+const mpRoundsControl = setupSegmentedControl(document.getElementById('setting-rounds'), (value) => {
+  updateMpSetting('roundCount', Number(value));
 });
-document.getElementById('setting-difficulty').addEventListener('change', (e) => {
-  updateMpSetting('difficulty', e.target.value);
+const mpDifficultyControl = setupSegmentedControl(document.getElementById('setting-difficulty'), (value) => {
+  updateMpSetting('difficulty', value);
 });
+
+// Only the host can change these - everyone else just sees them update live
+// (synced through the room doc) so they know what they're about to play.
+function renderLobbySettings(settings) {
+  mpTimerControl.setValue(settings.timerSeconds);
+  mpRoundsControl.setValue(settings.roundCount);
+  mpDifficultyControl.setValue(settings.difficulty);
+  mpTimerControl.setDisabled(!mpIsHost);
+  mpRoundsControl.setDisabled(!mpIsHost);
+  mpDifficultyControl.setDisabled(!mpIsHost);
+}
 
 document.getElementById('lobby-start-btn').addEventListener('click', async () => {
   const settings = mpLatestRoomData.settings || DEFAULT_MP_SETTINGS;
@@ -189,15 +193,36 @@ document.getElementById('lobby-start-btn').addEventListener('click', async () =>
     hideMpLoading();
   }
 });
-document.getElementById('lobby-leave-btn').addEventListener('click', () => {
+// Leaving used to just detach local listeners - the room doc's `players`
+// map still had the departed player in it forever, which broke two things:
+// checkRoundComplete() would wait on a guess that would never arrive (the
+// round could never complete), and if the host left, "Nästa runda"/"Starta"
+// stayed hidden from everyone since nothing reassigns host. Fix both by
+// removing self from `players` on the way out, and handing hostUid to
+// whoever's left if it was ours.
+async function leaveMpRoom() {
+  if (mpRoomRef && currentUser) {
+    try {
+      const data = mpLatestRoomData;
+      const update = { [`players.${currentUser.uid}`]: firebase.firestore.FieldValue.delete() };
+      if (data && data.hostUid === currentUser.uid) {
+        const remaining = Object.keys(data.players || {}).filter((uid) => uid !== currentUser.uid);
+        if (remaining.length) update.hostUid = remaining[0];
+      }
+      await mpRoomRef.update(update);
+    } catch (err) {
+      console.warn('Failed to leave room cleanly', err);
+    }
+  }
   leaveRoomCleanup();
   showScreen('start-modal');
-});
+}
+
+document.getElementById('lobby-leave-btn').addEventListener('click', leaveMpRoom);
 
 document.getElementById('mp-quit-btn').addEventListener('click', () => {
   if (!confirm('Avsluta spelet?')) return;
-  leaveRoomCleanup();
-  showScreen('start-modal');
+  leaveMpRoom();
 });
 
 function startMpRound(data) {

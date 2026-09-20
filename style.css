@@ -29,7 +29,25 @@ body::before {
   pointer-events: none;
 }
 
-#game, #mp-game { display: flex; height: 100vh; width: 100vw; position: relative; z-index: 1; }
+/* Entrance animations - both use `both` fill-mode so the element holds its
+   end state, and rely on a CSS quirk that's actually reliable across
+   browsers: an element's `animation` restarts every time it goes from
+   `display:none` back to rendered, since box generation happens fresh.
+   That means these just work with the existing .hidden-toggling code with
+   no JS changes needed. */
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(.92) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes screenFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+#game, #mp-game {
+  display: flex; height: 100vh; width: 100vw; position: relative; z-index: 1;
+  animation: screenFade .3s ease both;
+}
 
 #photo-panel, .photo-panel { flex: 1; position: relative; background: #111; overflow: hidden; }
 /* The app's captured JPEGs carry a stale/incorrect EXIF orientation tag from
@@ -88,13 +106,14 @@ body::before {
   padding: 14px 32px; font-size: 17px; font-weight: 600;
   background: var(--coral); color: #fff; border: none; border-radius: 999px;
   cursor: pointer; box-shadow: 0 6px 0 var(--coral-dark);
-  transition: transform .05s ease, box-shadow .05s ease, background .15s ease;
+  transition: transform .12s cubic-bezier(.2,.8,.3,1.2), box-shadow .12s ease, background .15s ease;
 }
-.btn:hover { background: var(--coral-hover); }
+.btn:hover { background: var(--coral-hover); transform: translateY(-2px); box-shadow: 0 8px 0 var(--coral-dark); }
 .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--coral-dark); }
 .btn:disabled {
   background: #8a8f99; box-shadow: 0 6px 0 #6b6f78; cursor: not-allowed;
 }
+.btn:disabled:hover { background: #8a8f99; transform: none; box-shadow: 0 6px 0 #6b6f78; }
 .btn:disabled:active { transform: none; box-shadow: 0 6px 0 #6b6f78; }
 
 /* Secondary button style - outlined, for the "less primary" of two actions. */
@@ -117,7 +136,7 @@ body::before {
 .hidden { display: none !important; }
 
 #result-modal, #start-modal, #end-modal, #username-modal, #leaderboard-modal,
-#multiplayer-modal, #lobby-modal, #mp-result-modal, #mp-final-modal {
+#multiplayer-modal, #lobby-modal, #mp-result-modal, #mp-final-modal, #about-modal {
   position: fixed; inset: 0;
   display: flex; align-items: center; justify-content: center; z-index: 2000;
   text-align: center;
@@ -125,6 +144,7 @@ body::before {
 
 /* Start/end screens sit directly on the shared background, like the mockups. */
 #start-modal, #end-modal { flex-direction: column; gap: 8px; }
+#start-box, #end-box { animation: modalPop .3s cubic-bezier(.2,.8,.3,1.1) both; }
 
 #start-box h1, #end-box h1, .end-box h1 {
   font-size: 52px; font-weight: 700; letter-spacing: -0.5px;
@@ -142,6 +162,7 @@ body::before {
   border: 1px solid rgba(255,255,255,0.15);
   box-shadow: 0 10px 0 var(--coral-dark), 0 20px 40px rgba(0,0,0,.4);
   max-width: 420px;
+  animation: modalPop .3s cubic-bezier(.2,.8,.3,1.1) both;
 }
 
 /* The result modal floats over the still-live photo/map, so only the card
@@ -155,6 +176,7 @@ body::before {
   border: 1px solid rgba(255,255,255,0.15);
   box-shadow: 0 10px 0 var(--coral-dark), 0 20px 40px rgba(0,0,0,.4);
   max-width: 420px;
+  animation: modalPop .3s cubic-bezier(.2,.8,.3,1.1) both;
 }
 #result-box h2, .result-box h2 { font-size: 26px; margin-bottom: 14px; }
 #result-box p, .result-box p { margin: 6px 0; font-size: 16px; font-weight: 500; }
@@ -174,30 +196,55 @@ body::before {
   border-radius: 999px; padding: 10px 18px;
   font-weight: 600; font-size: 15px; color: #fff;
   display: flex; align-items: center; gap: 8px;
+  transition: transform .15s ease;
 }
 button.pill-btn {
   font-family: inherit; border: none; cursor: pointer;
 }
+button.pill-btn:hover { transform: translateY(-1px); }
 .coin-icon {
   color: var(--gold); font-size: 12px;
+}
+
+/* Lightweight stand-in avatar (first letter of the player's name) next to
+   the username pill, echoing the profile-picture slot in the mockup
+   without building a whole upload feature. */
+.pill-avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--coral); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
 }
 
 .start-actions {
   display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
 }
 
-/* Generic card modal (username, leaderboard, multiplayer, lobby). */
-#username-box, #leaderboard-box, #multiplayer-box, #lobby-box {
+/* "Läs mer" under the start buttons, opening the about modal - a quiet
+   text link, not another button, so it doesn't compete with the CTAs. */
+.text-link {
+  background: none; border: none; color: #F0EDEA;
+  font-family: 'Fredoka', system-ui, sans-serif; font-size: 15px; font-weight: 600;
+  text-decoration: underline; text-underline-offset: 3px;
+  cursor: pointer; margin-top: 14px; transition: color .15s ease;
+}
+.text-link:hover { color: #fff; }
+
+/* Generic card modal (username, leaderboard, multiplayer, lobby, about). */
+#username-box, #leaderboard-box, #multiplayer-box, #lobby-box, #about-box {
   background: var(--card);
   padding: 32px 36px; border-radius: 24px;
   border: 1px solid rgba(255,255,255,0.15);
   box-shadow: 0 10px 0 var(--coral-dark), 0 20px 40px rgba(0,0,0,.4);
   max-width: 380px; width: 90vw;
+  animation: modalPop .3s cubic-bezier(.2,.8,.3,1.1) both;
 }
-#username-box h1, #leaderboard-box h2, #multiplayer-box h2, #lobby-box h2 {
+#username-box h1, #leaderboard-box h2, #multiplayer-box h2, #lobby-box h2, #about-box h2 {
   font-size: 30px; margin-bottom: 10px;
 }
 #username-box p { font-size: 15px; color: #F0EDEA; margin-bottom: 20px; }
+#about-box p { font-size: 15px; color: #F0EDEA; margin: 10px 0; text-align: left; }
+#about-box #about-close { margin-top: 14px; }
 
 #username-form { display: flex; flex-direction: column; gap: 14px; }
 #username-input, #mp-join-code {
@@ -239,14 +286,30 @@ button.pill-btn {
   gap: 10px; margin: 8px 0;
 }
 .lobby-setting-row label { font-size: 14px; font-weight: 600; color: #F0EDEA; }
-.lobby-setting-row select {
-  font-family: 'Fredoka', system-ui, sans-serif; font-weight: 600; font-size: 14px;
-  padding: 6px 14px; border-radius: 999px; border: 2px solid var(--card-field);
-  background: var(--card-field); color: #fff; cursor: pointer;
-}
-.lobby-setting-row select:disabled { opacity: .65; cursor: not-allowed; }
 
-#lobby-start-btn { margin-top: 12px; }
+/* Segmented pill control - replaces native <select> for settings so they
+   fit the game's own rounded-pill language instead of default browser
+   dropdown chrome, and gives real click targets to animate. */
+.seg-group {
+  display: flex; gap: 4px; background: var(--card-field);
+  border-radius: 999px; padding: 4px;
+}
+.seg-btn {
+  font-family: 'Fredoka', system-ui, sans-serif; font-weight: 600; font-size: 13px;
+  padding: 6px 12px; border-radius: 999px; border: none; background: transparent;
+  color: rgba(255,255,255,.7); cursor: pointer;
+  transition: background .15s ease, color .15s ease, transform .1s ease;
+}
+.seg-btn:hover:not(.active):not(:disabled) { background: rgba(255,255,255,.08); color: #fff; }
+.seg-btn.active {
+  background: var(--coral); color: #fff; box-shadow: 0 2px 0 var(--coral-dark);
+}
+.seg-btn:active:not(:disabled) { transform: scale(.92); }
+.seg-btn:disabled { cursor: not-allowed; opacity: .55; }
+
+#lobby-start-btn {
+  margin-top: 12px; text-transform: uppercase; letter-spacing: 1px;
+}
 #lobby-leave-btn { margin-top: 6px; }
 
 /* Difficulty filters applied to the photo (#photo or #mp-photo) - "medium"/
