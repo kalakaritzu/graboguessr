@@ -246,13 +246,12 @@ function ensureMpMap() {
     setTimeout(() => mpMap.invalidateSize(), 0);
     return;
   }
-  mpMap = L.map('mp-map', { rotate: true, bearing: 0 }).setView(GRABO_CENTER, 14);
+  mpMap = L.map('mp-map').setView(GRABO_CENTER, 14);
   mpMap.attributionControl.setPrefix(false);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap contributors'
   }).addTo(mpMap);
-  setupRightDragRotate(mpMap, document.getElementById('mp-map'));
   mpMap.on('click', (e) => {
     if (mpGuessLatLng) return; // already guessed this round
     mpGuessLatLng = e.latlng;
@@ -282,7 +281,6 @@ function loadMpRound(data) {
   if (mpGuessMarker) { mpMap.removeLayer(mpGuessMarker); mpGuessMarker = null; }
   clearMpOverlays();
   mpMap.setView(GRABO_CENTER, 14);
-  mpMap.setBearing(0); // start each round north-up, regardless of last round's rotation
   document.querySelector('#mp-game .map-panel').classList.remove('reveal');
   document.getElementById('mp-guess-btn').disabled = true;
 

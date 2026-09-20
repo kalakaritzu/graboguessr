@@ -97,75 +97,14 @@ function setupSegmentedControl(groupEl, onChange) {
   };
 }
 
-// Right-click-and-HOLD-drag rotates the map (leaflet-rotate plugin, loaded
-// before this script, patches Leaflet's click-to-LatLng math so pin
-// placement stays accurate at any bearing). Left-drag keeps doing
-// Leaflet's normal panning - this only hooks the right button, and
-// suppresses the browser's own right-click menu so the gesture reads as a
-// deliberate control. Shared by singleplayer and multiplayer's maps.
-//
-// Rotation tracks the pointer's ANGLE around the map's center, not just its
-// horizontal movement - a flat "deltaX = degrees" mapping ignores where you
-// grabbed the map, so dragging the same distance felt like it rotated by
-// different, inconsistent amounts (or even the wrong way) depending on
-// whether you started near the top, bottom, left or right edge. Angle-based
-// tracking makes the point under the cursor actually follow the cursor,
-// like turning a dial.
-//
-// On Windows Chrome specifically, calling preventDefault() on contextmenu
-// can suppress the matching mouseup/pointerup entirely (a known Chromium
-// bug: https://issues.chromium.org/issues/40425377) - so a right-click
-// would "attach" rotation to the cursor with no reliable release event
-// ever telling us to stop, making it feel like a click-to-toggle instead
-// of hold-to-drag. Fixed by never trusting a stored "is it still held"
-// flag - every mousemove instead re-checks the browser's own live e.buttons
-// bitmask, so it self-corrects on the very next move regardless of whether
-// any release event fired at all.
-function setupRightDragRotate(map, containerEl) {
-  let active = false;
-  let startAngle = 0;
-  let startBearing = 0;
-
-  function angleFromCenter(e) {
-    const rect = containerEl.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    return Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI);
-  }
-
-  containerEl.addEventListener('contextmenu', (e) => e.preventDefault());
-
-  containerEl.addEventListener('mousedown', (e) => {
-    if (e.button !== 2) return; // right button only
-    active = true;
-    startAngle = angleFromCenter(e);
-    startBearing = map.getBearing();
-    e.preventDefault();
-  });
-
-  window.addEventListener('mousemove', (e) => {
-    if (!active) return;
-    // e.buttons bit 2 = right button. This is live, real-time state from
-    // the browser, unlike our own `active` flag - trusting it here means a
-    // missed mouseup can't leave rotation stuck on.
-    if (!(e.buttons & 2)) { active = false; return; }
-    const delta = angleFromCenter(e) - startAngle;
-    map.setBearing(startBearing + delta);
-  });
-
-  window.addEventListener('mouseup', (e) => { if (e.button === 2) active = false; });
-  window.addEventListener('blur', () => { active = false; });
-}
-
 function initMap() {
-  map = L.map('map', { rotate: true, bearing: 0 }).setView(GRABO_CENTER, 14);
+  map = L.map('map').setView(GRABO_CENTER, 14);
   // Keep the required OpenStreetMap credit but drop Leaflet's own "Leaflet" self-promo prefix.
   map.attributionControl.setPrefix(false);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap contributors'
   }).addTo(map);
-  setupRightDragRotate(map, document.getElementById('map'));
 
   map.on('click', (e) => {
     if (roundLocked) return; // guess already submitted this round
@@ -228,7 +167,6 @@ function loadRound() {
   if (actualMarker) { map.removeLayer(actualMarker); actualMarker = null; }
   if (line) { map.removeLayer(line); line = null; }
   map.setView(GRABO_CENTER, 14);
-  map.setBearing(0); // start each round north-up, regardless of last round's rotation
   document.getElementById('map-panel').classList.remove('reveal');
   document.getElementById('guess-btn').disabled = true;
 
