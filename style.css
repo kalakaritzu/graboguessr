@@ -166,7 +166,16 @@ body::after {
   text-align: center;
 }
 
-/* Start/end screens sit directly on the shared background, like the mockups. */
+/* Only the start menu shows the blurred photo. Every other screen you
+   navigate to (as opposed to overlays like the round-result reveal, which
+   deliberately floats over the still-visible game) fills the whole
+   viewport with the brand color instead - there's nothing behind it, so
+   no floating "window" is needed. */
+#username-modal, #leaderboard-modal, #multiplayer-modal, #lobby-modal,
+#about-modal, #end-modal, #mp-final-modal {
+  background: var(--card);
+}
+
 #start-modal, #end-modal { flex-direction: column; gap: 8px; }
 #start-box, #end-box { animation: modalPop .3s cubic-bezier(.2,.8,.3,1.1) both; }
 
@@ -182,9 +191,7 @@ body::after {
 #end-box #final-score {
   font-size: 20px; font-weight: 600; margin-bottom: 24px; color: #F0EDEA;
 }
-.end-box { background: var(--card); padding: 32px 40px; border-radius: 24px;
-  border: 1px solid rgba(255,255,255,0.15);
-  box-shadow: 0 10px 0 var(--coral-dark), 0 20px 40px rgba(0,0,0,.4);
+.end-box {
   max-width: 420px;
   animation: modalPop .3s cubic-bezier(.2,.8,.3,1.1) both;
 }
@@ -254,12 +261,10 @@ button.pill-btn:hover { transform: translateY(-1px); }
 }
 .text-link:hover { color: #fff; }
 
-/* Generic card modal (username, leaderboard, multiplayer, lobby, about). */
+/* These used to be floating cards; now the whole screen (#username-modal
+   etc.) is already the brand color, so the box just sizes/centers the
+   content instead of drawing its own nested "window". */
 #username-box, #leaderboard-box, #multiplayer-box, #lobby-box, #about-box {
-  background: var(--card);
-  padding: 32px 36px; border-radius: 24px;
-  border: 1px solid rgba(255,255,255,0.15);
-  box-shadow: 0 10px 0 var(--coral-dark), 0 20px 40px rgba(0,0,0,.4);
   max-width: 380px; width: 90vw;
   animation: modalPop .3s cubic-bezier(.2,.8,.3,1.1) both;
 }
