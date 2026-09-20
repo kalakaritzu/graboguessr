@@ -10,8 +10,52 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="style.css?v=21">
+<!-- Inlined (not in style.css) so this renders instantly, before the
+     external stylesheet has even finished loading - the whole point is to
+     never show an unstyled flash while the background photo/font load in. -->
+<style>
+  #page-loading {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #0C1220;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    transition: opacity .4s ease;
+  }
+  #page-loading.fade-hidden { opacity: 0; pointer-events: none; }
+  #page-loading .spinner {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 4px solid rgba(255,255,255,.25); border-top-color: #EA5B44;
+    animation: page-loading-spin .8s linear infinite;
+  }
+  @keyframes page-loading-spin { to { transform: rotate(360deg); } }
+  #page-loading p { color: #fff; font-family: system-ui, sans-serif; font-weight: 600; font-size: 15px; }
+</style>
 </head>
 <body>
+
+  <div id="page-loading">
+    <div class="spinner"></div>
+    <p>Laddar…</p>
+  </div>
+  <script>
+    (function () {
+      var el = document.getElementById('page-loading');
+      var pending = 2;
+      function done() {
+        pending--;
+        if (pending <= 0 && el) el.classList.add('fade-hidden');
+      }
+      var img = new Image();
+      img.onload = done;
+      img.onerror = done;
+      img.src = 'assets/bg-torget.jpg';
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(done).catch(done);
+      } else {
+        done();
+      }
+      setTimeout(function () { if (el) el.classList.add('fade-hidden'); }, 4000);
+    })();
+  </script>
 
   <!-- Singleplayer game screen -->
   <div id="game" class="hidden">
