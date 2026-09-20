@@ -142,7 +142,11 @@ body::after {
   box-shadow: 0 6px 0 rgba(255,255,255,.25);
   border: 2px solid rgba(255,255,255,.6);
 }
-.btn-outline:hover { background: rgba(255,255,255,.1); }
+.btn-outline:hover {
+  background: rgba(255,255,255,.1);
+  box-shadow: 0 8px 0 rgba(255,255,255,.25);
+}
+.btn-outline:active { box-shadow: 0 2px 0 rgba(255,255,255,.25); }
 
 /* Plain text button - for low-emphasis actions like "back" / "leave". */
 .btn-text {
