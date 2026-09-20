@@ -22,7 +22,7 @@ async function openLeaderboard() {
       li.innerHTML =
         `<span class="rank">${rank}</span>` +
         `<span class="name">${escapeHtml(data.name || '?')}</span>` +
-        `<span class="points">${data.points || 0}</span>`;
+        `<span class="points">${data.points || 0}<img class="coin-icon" src="assets/coin-icon.png" alt=""></span>`;
       list.appendChild(li);
       rank++;
     });
