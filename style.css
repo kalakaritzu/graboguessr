@@ -160,7 +160,8 @@ body::after {
 .hidden { display: none !important; }
 
 #result-modal, #start-modal, #end-modal, #username-modal, #leaderboard-modal,
-#multiplayer-modal, #lobby-modal, #mp-result-modal, #mp-final-modal, #about-modal {
+#multiplayer-modal, #lobby-modal, #mp-result-modal, #mp-final-modal, #about-modal,
+#sp-settings-modal {
   position: fixed; inset: 0;
   display: flex; align-items: center; justify-content: center; z-index: 2000;
   text-align: center;
@@ -172,7 +173,7 @@ body::after {
    viewport with the brand color instead - there's nothing behind it, so
    no floating "window" is needed. */
 #username-modal, #leaderboard-modal, #multiplayer-modal, #lobby-modal,
-#about-modal, #end-modal, #mp-final-modal {
+#about-modal, #end-modal, #mp-final-modal, #sp-settings-modal {
   background: var(--card);
 }
 
@@ -273,11 +274,11 @@ button.pill-btn:hover { transform: translateY(-1px); }
 /* These used to be floating cards; now the whole screen (#username-modal
    etc.) is already the brand color, so the box just sizes/centers the
    content instead of drawing its own nested "window". */
-#username-box, #leaderboard-box, #multiplayer-box, #lobby-box, #about-box {
+#username-box, #leaderboard-box, #multiplayer-box, #lobby-box, #about-box, #sp-settings-box {
   max-width: 380px; width: 90vw;
   animation: modalPop .3s cubic-bezier(.2,.8,.3,1.1) both;
 }
-#username-box h1, #leaderboard-box h2, #multiplayer-box h2, #lobby-box h2, #about-box h2 {
+#username-box h1, #leaderboard-box h2, #multiplayer-box h2, #lobby-box h2, #about-box h2, #sp-settings-box h2 {
   font-size: 30px; margin-bottom: 10px;
 }
 #username-box p { font-size: 15px; color: #F0EDEA; margin-bottom: 20px; }
@@ -374,10 +375,11 @@ button.pill-btn:hover { transform: translateY(-1px); }
 .round-loading p { font-size: 20px; font-weight: 600; color: #fff; }
 .round-loading.fade-hidden { opacity: 0; pointer-events: none; }
 
-/* Singleplayer's settings selects live on the start screen (not in a fixed-
-   width card like the lobby), so give the row group its own column width. */
-#sp-settings { margin: 4px 0 24px; }
-#sp-settings .lobby-setting-row { max-width: 320px; margin: 8px auto; }
+#sp-settings { margin: 6px 0 4px; }
+#sp-start-confirm-btn {
+  margin-top: 12px; text-transform: uppercase; letter-spacing: 1px;
+}
+#sp-settings-back-btn { margin-top: 6px; }
 
 #mp-final-list { list-style: none; margin: 16px 0; text-align: left; }
 

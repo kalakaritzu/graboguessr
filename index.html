@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="style.css?v=25">
+<link rel="stylesheet" href="style.css?v=26">
 <!-- Inlined (not in style.css) so this renders instantly, before the
      external stylesheet has even finished loading - the whole point is to
      never show an unstyled flash while the background photo/font load in. -->
@@ -102,6 +102,19 @@
       <h1>GråboGuessr</h1>
       <p>Hur väl känner du till Gråbo?</p>
 
+      <div class="start-actions">
+        <button id="start-btn" class="btn">Enkelspelarspel</button>
+        <button id="multiplayer-btn" class="btn btn-outline">Flerspelarläge</button>
+      </div>
+
+      <button type="button" id="about-btn" class="text-link">Läs mer</button>
+    </div>
+  </div>
+
+  <!-- Singleplayer: settings, shown after clicking "Enkelspelarspel" -->
+  <div id="sp-settings-modal" class="hidden">
+    <div id="sp-settings-box">
+      <h2>Enkelspelarspel</h2>
       <div id="sp-settings">
         <div class="lobby-setting-row">
           <label>Tid per runda</label>
@@ -130,13 +143,8 @@
           </div>
         </div>
       </div>
-
-      <div class="start-actions">
-        <button id="start-btn" class="btn">Enkelspelarspel</button>
-        <button id="multiplayer-btn" class="btn btn-outline">Flerspelarläge</button>
-      </div>
-
-      <button type="button" id="about-btn" class="text-link">Läs mer</button>
+      <button type="button" id="sp-start-confirm-btn" class="btn">Starta</button>
+      <button type="button" id="sp-settings-back-btn" class="btn btn-text">Tillbaka</button>
     </div>
   </div>
 
@@ -308,7 +316,7 @@
   <script src="auth.js?v=5"></script>
   <script src="leaderboard.js?v=3"></script>
   <script src="spots.js?v=3"></script>
-  <script src="game.js?v=16"></script>
-  <script src="multiplayer.js?v=13"></script>
+  <script src="game.js?v=17"></script>
+  <script src="multiplayer.js?v=14"></script>
 </body>
 </html>

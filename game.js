@@ -199,6 +199,7 @@ function startGame() {
   round = 0;
   order = shuffle([...Array(SPOTS.length).keys()]).slice(0, ROUNDS);
   document.getElementById('start-modal').classList.add('hidden');
+  document.getElementById('sp-settings-modal').classList.add('hidden');
   document.getElementById('end-modal').classList.add('hidden');
   document.getElementById('game').classList.remove('hidden');
   if (!map) initMap();
@@ -374,7 +375,20 @@ function nextRound() {
   }
 }
 
-document.getElementById('start-btn').addEventListener('click', startGame);
+// "Enkelspelarspel" opens the settings screen first, rather than jumping
+// straight into a game - "Starta" there is what actually calls startGame().
+// "Spela igen" after a finished game skips straight back in with whatever
+// settings were used last, since re-picking them every replay would be
+// tedious for a quick rematch.
+document.getElementById('start-btn').addEventListener('click', () => {
+  document.getElementById('start-modal').classList.add('hidden');
+  document.getElementById('sp-settings-modal').classList.remove('hidden');
+});
+document.getElementById('sp-start-confirm-btn').addEventListener('click', startGame);
+document.getElementById('sp-settings-back-btn').addEventListener('click', () => {
+  document.getElementById('sp-settings-modal').classList.add('hidden');
+  document.getElementById('start-modal').classList.remove('hidden');
+});
 document.getElementById('restart-btn').addEventListener('click', startGame);
 document.getElementById('guess-btn').addEventListener('click', makeGuess);
 document.getElementById('next-btn').addEventListener('click', nextRound);

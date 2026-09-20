@@ -42,7 +42,7 @@ function randomRoomCode() {
 }
 
 function showScreen(id) {
-  ['start-modal', 'multiplayer-modal', 'lobby-modal', 'game', 'mp-game', 'mp-result-modal', 'mp-final-modal']
+  ['start-modal', 'sp-settings-modal', 'multiplayer-modal', 'lobby-modal', 'game', 'mp-game', 'mp-result-modal', 'mp-final-modal']
     .forEach((s) => document.getElementById(s).classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 }
