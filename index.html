@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="style.css?v=24">
+<link rel="stylesheet" href="style.css?v=25">
 <!-- Inlined (not in style.css) so this renders instantly, before the
      external stylesheet has even finished loading - the whole point is to
      never show an unstyled flash while the background photo/font load in. -->
@@ -90,8 +90,8 @@
   <div id="start-modal">
     <div id="top-pills">
       <div class="pill" id="user-pill">
-        <span class="pill-avatar" id="user-pill-avatar">?</span>
-        <span id="user-pill-name">Spelare</span>
+        <span class="pill-avatar loading" id="user-pill-avatar">?</span>
+        <span id="user-pill-name" class="loading">…</span>
       </div>
       <button class="pill pill-btn" id="leaderboard-btn">
         <img class="coin-icon" src="assets/coin-icon.png" alt="">
@@ -305,7 +305,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script src="auth.js?v=4"></script>
+  <script src="auth.js?v=5"></script>
   <script src="leaderboard.js?v=3"></script>
   <script src="spots.js?v=3"></script>
   <script src="game.js?v=16"></script>

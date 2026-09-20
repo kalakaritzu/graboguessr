@@ -47,8 +47,14 @@ function updatePointsDisplay() {
   const avatarEl = document.getElementById('user-pill-avatar');
   const pointsEl = document.getElementById('points-display');
   if (!currentUser) return;
-  if (nameEl) nameEl.textContent = currentUser.name;
-  if (avatarEl) avatarEl.textContent = currentUser.name.trim().charAt(0).toUpperCase() || '?';
+  if (nameEl) {
+    nameEl.classList.remove('loading');
+    nameEl.textContent = currentUser.name;
+  }
+  if (avatarEl) {
+    avatarEl.classList.remove('loading');
+    avatarEl.textContent = currentUser.name.trim().charAt(0).toUpperCase() || '?';
+  }
   if (pointsEl) {
     pointsEl.classList.remove('loading');
     pointsEl.textContent = formatPoints(currentUser.points);
@@ -57,11 +63,11 @@ function updatePointsDisplay() {
 }
 
 // Safety net: if something goes wrong fetching the user doc (network
-// error, etc.) and updatePointsDisplay() never runs, don't leave the pill
+// error, etc.) and updatePointsDisplay() never runs, don't leave the pills
 // pulsing forever - just stop the animation after a few seconds.
 setTimeout(() => {
-  const pointsEl = document.getElementById('points-display');
-  if (pointsEl) pointsEl.classList.remove('loading');
+  document.querySelectorAll('#points-display.loading, #user-pill-name.loading, #user-pill-avatar.loading')
+    .forEach((el) => el.classList.remove('loading'));
 }, 8000);
 
 async function addPoints(amount) {
