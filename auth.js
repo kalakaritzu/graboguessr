@@ -50,10 +50,19 @@ function updatePointsDisplay() {
   if (nameEl) nameEl.textContent = currentUser.name;
   if (avatarEl) avatarEl.textContent = currentUser.name.trim().charAt(0).toUpperCase() || '?';
   if (pointsEl) {
+    pointsEl.classList.remove('loading');
     pointsEl.textContent = formatPoints(currentUser.points);
     pointsEl.title = `${currentUser.points} Gråbopoäng`; // exact value on hover
   }
 }
+
+// Safety net: if something goes wrong fetching the user doc (network
+// error, etc.) and updatePointsDisplay() never runs, don't leave the pill
+// pulsing forever - just stop the animation after a few seconds.
+setTimeout(() => {
+  const pointsEl = document.getElementById('points-display');
+  if (pointsEl) pointsEl.classList.remove('loading');
+}, 8000);
 
 async function addPoints(amount) {
   if (!currentUser || !amount) return;

@@ -237,6 +237,14 @@ button.pill-btn:hover { transform: translateY(-1px); }
   width: 16px; height: 16px; display: block;
 }
 
+/* Shown on #points-display until the real Gråbopoäng total has loaded from
+   Firestore, so it reads as "still loading" rather than "you have 0". */
+@keyframes pill-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
+#points-display.loading { animation: pill-pulse 1.1s ease-in-out infinite; }
+
 /* Lightweight stand-in avatar (first letter of the player's name) next to
    the username pill, echoing the profile-picture slot in the mockup
    without building a whole upload feature. */
