@@ -74,14 +74,44 @@ function setupSegmentedControl(groupEl, onChange) {
   };
 }
 
+// Right-click-drag rotates the map (leaflet-rotate plugin, loaded before
+// this script, patches Leaflet's click-to-LatLng math so pin placement
+// stays accurate at any bearing). Left-drag keeps doing Leaflet's normal
+// panning - this only hooks the right button, and suppresses the browser's
+// own right-click menu so the gesture reads as a deliberate control.
+// Shared by singleplayer and multiplayer's maps.
+function setupRightDragRotate(map, containerEl) {
+  let dragging = false;
+  let startX = 0;
+  let startBearing = 0;
+
+  containerEl.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  containerEl.addEventListener('mousedown', (e) => {
+    if (e.button !== 2) return; // right button only
+    dragging = true;
+    startX = e.clientX;
+    startBearing = map.getBearing();
+    e.preventDefault();
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    map.setBearing(startBearing + (e.clientX - startX) * 0.5);
+  });
+
+  window.addEventListener('mouseup', () => { dragging = false; });
+}
+
 function initMap() {
-  map = L.map('map').setView(GRABO_CENTER, 14);
+  map = L.map('map', { rotate: true, bearing: 0 }).setView(GRABO_CENTER, 14);
   // Keep the required OpenStreetMap credit but drop Leaflet's own "Leaflet" self-promo prefix.
   map.attributionControl.setPrefix(false);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap contributors'
   }).addTo(map);
+  setupRightDragRotate(map, document.getElementById('map'));
 
   map.on('click', (e) => {
     if (roundLocked) return; // guess already submitted this round
@@ -143,6 +173,8 @@ function loadRound() {
   if (actualMarker) { map.removeLayer(actualMarker); actualMarker = null; }
   if (line) { map.removeLayer(line); line = null; }
   map.setView(GRABO_CENTER, 14);
+  map.setBearing(0); // start each round north-up, regardless of last round's rotation
+  document.getElementById('map-panel').classList.remove('reveal');
   document.getElementById('guess-btn').disabled = true;
 
   const spot = SPOTS[order[round]];
@@ -280,6 +312,7 @@ function makeGuess() {
 
   line = L.polyline([guessLatLng, [spot.lat, spot.lng]], { color: 'red' }).addTo(map);
   map.fitBounds(line.getBounds(), { padding: [40, 40] });
+  document.getElementById('map-panel').classList.add('reveal');
 
   document.getElementById('result-title').textContent =
     dist < 0.05 ? 'Helt rätt!' : 'Rundans resultat';

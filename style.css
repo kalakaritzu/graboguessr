@@ -17,10 +17,25 @@ body {
   overflow: hidden;
   height: 100vh;
   color: #fff;
-  background: #0C1220 url('assets/bg-torget.jpg') center/cover no-repeat fixed;
+  background: #0C1220;
 }
 
+/* The background photo lives on its own blurred, oversized layer (rather
+   than a filter on body itself) so the blur never touches foreground text/
+   buttons. Oversizing via scale keeps the blur's softened edges just
+   outside the viewport instead of showing as a lighter border. */
 body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: url('assets/bg-torget.jpg') center/cover no-repeat;
+  filter: blur(7px);
+  transform: scale(1.08);
+  z-index: 0;
+  pointer-events: none;
+}
+
+body::after {
   content: '';
   position: fixed;
   inset: 0;
@@ -87,6 +102,11 @@ body::before {
   z-index: 2;
 }
 #map-panel:hover, .map-panel:hover { width: 60%; }
+/* Once the round's result is in, the map takes over most of the screen
+   automatically (no hover needed) so both pins and the real spot are easy
+   to read while the result card is up. */
+#map-panel.reveal, .map-panel.reveal,
+#map-panel.reveal:hover, .map-panel.reveal:hover { width: 78%; }
 #map, #mp-map { width: 100%; height: 100%; }
 
 /* Trim Leaflet's attribution box down so it's a quiet corner label, not a bar. */
