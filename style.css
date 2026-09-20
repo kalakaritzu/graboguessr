@@ -234,7 +234,7 @@ button.pill-btn {
 }
 button.pill-btn:hover { transform: translateY(-1px); }
 .coin-icon {
-  color: var(--gold); font-size: 12px;
+  width: 16px; height: 16px; display: block;
 }
 
 /* Lightweight stand-in avatar (first letter of the player's name) next to
