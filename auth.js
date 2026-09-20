@@ -17,6 +17,16 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// Abbreviates big point totals (11165 -> "11.2k") so the header pill and
+// leaderboard stay compact once players rack up Gråbopoäng. Shared by
+// auth.js (header pill) and leaderboard.js.
+function formatPoints(n) {
+  n = n || 0;
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return String(n);
+}
+
 async function ensureUserDoc(uid, name) {
   const ref = db.collection('users').doc(uid);
   const snap = await ref.get();
@@ -39,7 +49,10 @@ function updatePointsDisplay() {
   if (!currentUser) return;
   if (nameEl) nameEl.textContent = currentUser.name;
   if (avatarEl) avatarEl.textContent = currentUser.name.trim().charAt(0).toUpperCase() || '?';
-  if (pointsEl) pointsEl.textContent = `${currentUser.points}`;
+  if (pointsEl) {
+    pointsEl.textContent = formatPoints(currentUser.points);
+    pointsEl.title = `${currentUser.points} Gråbopoäng`; // exact value on hover
+  }
 }
 
 async function addPoints(amount) {
