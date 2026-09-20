@@ -13,6 +13,29 @@ let roundLocked = false; // true once the guess is submitted - the pin can no lo
 let map, line;
 let spDifficulty = 'easy';
 
+// Custom replacement for native confirm() (which renders as an ugly
+// browser-chrome dialog stamped with the page's URL) - styled to match the
+// rest of the UI instead. Shared by singleplayer and multiplayer's quit
+// buttons. Resolves true/false like confirm() would, just asynchronously.
+function customConfirm(message) {
+  return new Promise((resolve) => {
+    document.getElementById('confirm-message').textContent = message;
+    document.getElementById('confirm-modal').classList.remove('hidden');
+    const yesBtn = document.getElementById('confirm-yes');
+    const noBtn = document.getElementById('confirm-no');
+    function cleanup(result) {
+      document.getElementById('confirm-modal').classList.add('hidden');
+      yesBtn.removeEventListener('click', onYes);
+      noBtn.removeEventListener('click', onNo);
+      resolve(result);
+    }
+    function onYes() { cleanup(true); }
+    function onNo() { cleanup(false); }
+    yesBtn.addEventListener('click', onYes);
+    noBtn.addEventListener('click', onNo);
+  });
+}
+
 // Difficulty filters applied to a round's photo - "medium"/"hard" make it
 // harder to read without touching the underlying image or scoring. Shared
 // by singleplayer and multiplayer.
@@ -347,8 +370,8 @@ document.getElementById('about-close').addEventListener('click', () => {
   document.getElementById('about-modal').classList.add('hidden');
 });
 
-document.getElementById('quit-btn').addEventListener('click', () => {
-  if (!confirm('Avsluta spelet?')) return;
+document.getElementById('quit-btn').addEventListener('click', async () => {
+  if (!(await customConfirm('Avsluta spelet?'))) return;
   spTimer.stop();
   document.getElementById('game').classList.add('hidden');
   document.getElementById('result-modal').classList.add('hidden');

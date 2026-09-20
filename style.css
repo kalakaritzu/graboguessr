@@ -379,3 +379,22 @@ button.pill-btn:hover { transform: translateY(-1px); }
   animation: mp-spin .8s linear infinite;
 }
 @keyframes mp-spin { to { transform: rotate(360deg); } }
+
+/* Custom confirm dialog (replaces native confirm()) - dims whatever's
+   behind it (live game, map, or a solid-color menu page) so the card
+   reads clearly either way. */
+#confirm-modal {
+  position: fixed; inset: 0; z-index: 2500;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(8,14,26,.6);
+}
+#confirm-box {
+  background: var(--card); padding: 28px 32px; border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 10px 0 var(--coral-dark), 0 20px 40px rgba(0,0,0,.4);
+  max-width: 360px; width: 90vw;
+  text-align: center;
+  animation: modalPop .25s cubic-bezier(.2,.8,.3,1.1) both;
+}
+#confirm-message { font-size: 18px; font-weight: 600; margin-bottom: 22px; }
+.confirm-actions { display: flex; gap: 12px; justify-content: center; }

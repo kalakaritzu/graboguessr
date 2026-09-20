@@ -220,8 +220,8 @@ async function leaveMpRoom() {
 
 document.getElementById('lobby-leave-btn').addEventListener('click', leaveMpRoom);
 
-document.getElementById('mp-quit-btn').addEventListener('click', () => {
-  if (!confirm('Avsluta spelet?')) return;
+document.getElementById('mp-quit-btn').addEventListener('click', async () => {
+  if (!(await customConfirm('Avsluta spelet?'))) return;
   leaveMpRoom();
 });
 

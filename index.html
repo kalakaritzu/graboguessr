@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="style.css?v=19">
+<link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
 
@@ -244,6 +244,17 @@
     <p id="mp-loading-text">Laddar…</p>
   </div>
 
+  <!-- Generic confirm dialog, replacing native confirm() - see customConfirm() in game.js -->
+  <div id="confirm-modal" class="hidden">
+    <div id="confirm-box">
+      <p id="confirm-message"></p>
+      <div class="confirm-actions">
+        <button type="button" id="confirm-yes" class="btn">Ja</button>
+        <button type="button" id="confirm-no" class="btn btn-outline">Avbryt</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -253,7 +264,7 @@
   <script src="auth.js?v=2"></script>
   <script src="leaderboard.js"></script>
   <script src="spots.js?v=3"></script>
-  <script src="game.js?v=14"></script>
-  <script src="multiplayer.js?v=12"></script>
+  <script src="game.js?v=15"></script>
+  <script src="multiplayer.js?v=13"></script>
 </body>
 </html>
