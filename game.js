@@ -103,24 +103,40 @@ function setupSegmentedControl(groupEl, onChange) {
 // panning - this only hooks the right button, and suppresses the browser's
 // own right-click menu so the gesture reads as a deliberate control.
 // Shared by singleplayer and multiplayer's maps.
+//
+// Rotation tracks the mouse's ANGLE around the map's center, not just its
+// horizontal movement - a flat "deltaX = degrees" mapping ignores where you
+// grabbed the map, so dragging the same distance felt like it rotated by
+// different, inconsistent amounts (or even the wrong way) depending on
+// whether you started near the top, bottom, left or right edge. Angle-based
+// tracking makes the point under the cursor actually follow the cursor,
+// like turning a dial.
 function setupRightDragRotate(map, containerEl) {
   let dragging = false;
-  let startX = 0;
+  let startAngle = 0;
   let startBearing = 0;
+
+  function angleFromCenter(e) {
+    const rect = containerEl.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    return Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI);
+  }
 
   containerEl.addEventListener('contextmenu', (e) => e.preventDefault());
 
   containerEl.addEventListener('mousedown', (e) => {
     if (e.button !== 2) return; // right button only
     dragging = true;
-    startX = e.clientX;
+    startAngle = angleFromCenter(e);
     startBearing = map.getBearing();
     e.preventDefault();
   });
 
   window.addEventListener('mousemove', (e) => {
     if (!dragging) return;
-    map.setBearing(startBearing + (e.clientX - startX) * 0.5);
+    const delta = angleFromCenter(e) - startAngle;
+    map.setBearing(startBearing + delta);
   });
 
   window.addEventListener('mouseup', () => { dragging = false; });
