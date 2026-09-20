@@ -39,7 +39,7 @@ body::after {
   content: '';
   position: fixed;
   inset: 0;
-  background: linear-gradient(180deg, rgba(8,14,26,.80), rgba(8,14,26,.55) 45%, rgba(8,14,26,.75));
+  background: linear-gradient(180deg, rgba(140,31,20,.82), rgba(140,31,20,.55) 45%, rgba(140,31,20,.78));
   z-index: 0;
   pointer-events: none;
 }
