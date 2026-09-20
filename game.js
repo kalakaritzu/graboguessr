@@ -112,15 +112,17 @@ function setupSegmentedControl(groupEl, onChange) {
 // tracking makes the point under the cursor actually follow the cursor,
 // like turning a dial.
 //
-// Uses the Pointer Events API with setPointerCapture rather than plain
-// mouse events: that guarantees this element keeps getting move/up events
-// for the drag even if the cursor leaves it or the window loses focus
-// mid-drag, which plain mousemove/mouseup on window doesn't guarantee (a
-// missed "up" there left rotation stuck "on" until another right-click,
-// making it feel like a toggle instead of a hold).
+// On Windows Chrome specifically, calling preventDefault() on contextmenu
+// can suppress the matching mouseup/pointerup entirely (a known Chromium
+// bug: https://issues.chromium.org/issues/40425377) - so a right-click
+// would "attach" rotation to the cursor with no reliable release event
+// ever telling us to stop, making it feel like a click-to-toggle instead
+// of hold-to-drag. Fixed by never trusting a stored "is it still held"
+// flag - every mousemove instead re-checks the browser's own live e.buttons
+// bitmask, so it self-corrects on the very next move regardless of whether
+// any release event fired at all.
 function setupRightDragRotate(map, containerEl) {
-  let dragging = false;
-  let pointerId = null;
+  let active = false;
   let startAngle = 0;
   let startBearing = 0;
 
@@ -131,40 +133,28 @@ function setupRightDragRotate(map, containerEl) {
     return Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI);
   }
 
-  function stopDragging() {
-    dragging = false;
-    if (pointerId !== null) {
-      try { containerEl.releasePointerCapture(pointerId); } catch (err) { /* already released */ }
-      pointerId = null;
-    }
-  }
-
   containerEl.addEventListener('contextmenu', (e) => e.preventDefault());
 
-  containerEl.addEventListener('pointerdown', (e) => {
+  containerEl.addEventListener('mousedown', (e) => {
     if (e.button !== 2) return; // right button only
-    dragging = true;
-    pointerId = e.pointerId;
-    containerEl.setPointerCapture(pointerId);
+    active = true;
     startAngle = angleFromCenter(e);
     startBearing = map.getBearing();
     e.preventDefault();
   });
 
-  containerEl.addEventListener('pointermove', (e) => {
-    if (!dragging || e.pointerId !== pointerId) return;
+  window.addEventListener('mousemove', (e) => {
+    if (!active) return;
+    // e.buttons bit 2 = right button. This is live, real-time state from
+    // the browser, unlike our own `active` flag - trusting it here means a
+    // missed mouseup can't leave rotation stuck on.
+    if (!(e.buttons & 2)) { active = false; return; }
     const delta = angleFromCenter(e) - startAngle;
     map.setBearing(startBearing + delta);
   });
 
-  containerEl.addEventListener('pointerup', (e) => {
-    if (e.pointerId !== pointerId) return;
-    stopDragging();
-  });
-  containerEl.addEventListener('pointercancel', stopDragging);
-  // Extra safety net - if focus is lost mid-drag (e.g. alt-tab), don't
-  // leave rotation stuck on.
-  window.addEventListener('blur', stopDragging);
+  window.addEventListener('mouseup', (e) => { if (e.button === 2) active = false; });
+  window.addEventListener('blur', () => { active = false; });
 }
 
 function initMap() {
