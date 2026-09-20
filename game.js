@@ -97,22 +97,30 @@ function setupSegmentedControl(groupEl, onChange) {
   };
 }
 
-// Right-click-drag rotates the map (leaflet-rotate plugin, loaded before
-// this script, patches Leaflet's click-to-LatLng math so pin placement
-// stays accurate at any bearing). Left-drag keeps doing Leaflet's normal
-// panning - this only hooks the right button, and suppresses the browser's
-// own right-click menu so the gesture reads as a deliberate control.
-// Shared by singleplayer and multiplayer's maps.
+// Right-click-and-HOLD-drag rotates the map (leaflet-rotate plugin, loaded
+// before this script, patches Leaflet's click-to-LatLng math so pin
+// placement stays accurate at any bearing). Left-drag keeps doing
+// Leaflet's normal panning - this only hooks the right button, and
+// suppresses the browser's own right-click menu so the gesture reads as a
+// deliberate control. Shared by singleplayer and multiplayer's maps.
 //
-// Rotation tracks the mouse's ANGLE around the map's center, not just its
+// Rotation tracks the pointer's ANGLE around the map's center, not just its
 // horizontal movement - a flat "deltaX = degrees" mapping ignores where you
 // grabbed the map, so dragging the same distance felt like it rotated by
 // different, inconsistent amounts (or even the wrong way) depending on
 // whether you started near the top, bottom, left or right edge. Angle-based
 // tracking makes the point under the cursor actually follow the cursor,
 // like turning a dial.
+//
+// Uses the Pointer Events API with setPointerCapture rather than plain
+// mouse events: that guarantees this element keeps getting move/up events
+// for the drag even if the cursor leaves it or the window loses focus
+// mid-drag, which plain mousemove/mouseup on window doesn't guarantee (a
+// missed "up" there left rotation stuck "on" until another right-click,
+// making it feel like a toggle instead of a hold).
 function setupRightDragRotate(map, containerEl) {
   let dragging = false;
+  let pointerId = null;
   let startAngle = 0;
   let startBearing = 0;
 
@@ -123,23 +131,40 @@ function setupRightDragRotate(map, containerEl) {
     return Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI);
   }
 
+  function stopDragging() {
+    dragging = false;
+    if (pointerId !== null) {
+      try { containerEl.releasePointerCapture(pointerId); } catch (err) { /* already released */ }
+      pointerId = null;
+    }
+  }
+
   containerEl.addEventListener('contextmenu', (e) => e.preventDefault());
 
-  containerEl.addEventListener('mousedown', (e) => {
+  containerEl.addEventListener('pointerdown', (e) => {
     if (e.button !== 2) return; // right button only
     dragging = true;
+    pointerId = e.pointerId;
+    containerEl.setPointerCapture(pointerId);
     startAngle = angleFromCenter(e);
     startBearing = map.getBearing();
     e.preventDefault();
   });
 
-  window.addEventListener('mousemove', (e) => {
-    if (!dragging) return;
+  containerEl.addEventListener('pointermove', (e) => {
+    if (!dragging || e.pointerId !== pointerId) return;
     const delta = angleFromCenter(e) - startAngle;
     map.setBearing(startBearing + delta);
   });
 
-  window.addEventListener('mouseup', () => { dragging = false; });
+  containerEl.addEventListener('pointerup', (e) => {
+    if (e.pointerId !== pointerId) return;
+    stopDragging();
+  });
+  containerEl.addEventListener('pointercancel', stopDragging);
+  // Extra safety net - if focus is lost mid-drag (e.g. alt-tab), don't
+  // leave rotation stuck on.
+  window.addEventListener('blur', stopDragging);
 }
 
 function initMap() {
